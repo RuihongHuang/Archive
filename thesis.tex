@@ -1,0 +1,130 @@
+ 
+\documentclass[11pt,Chicago]{uuthesis2e}
+
+\usepackage{makeidx}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{epsfig}
+\usepackage{afterpage}
+\usepackage{thesis}
+\usepackage{url}
+\usepackage{amssymb}
+\usepackage{psfrag}
+\DeclareGraphicsExtensions{.jpg,.pdf,.mds,.png}
+%\usepackage{amssymb}
+%\usepackage{diagram}
+%\usepackage{tgrind}
+%\usepackage[sectionbib,round]{natbib} % author-year citations
+\usepackage[sectionbib,numbers]{natbib} % numeric citations
+
+\citeindextrue
+\makeindex
+\includeonly{acknowledge,chap1,chap2,chap3,chap4,chap5,chap6,appendix01,appendix02,appendix03,appendix04}
+
+\title{Improving Event Extraction by Discourse-Guided and Multi-faceted Event Recognition}
+\author{Ruihong Huang}
+\thesistype{thesis}
+%\thesistype{proposal}
+\degree{Doctor of Philosophy}
+%\degree{Master of Science}
+
+\graduatedean{David S. Chapman}
+\department{School of Computing}
+\departmentchair{Christopher R. Johnson}
+\committeechair{Ellen Riloff}
+\chairtitle{Associate Professor}
+\firstreader{Jur van den Berg}
+\secondreader{Raymond Mooney}
+\thirdreader{William Thompson}
+\fourthreader{Suresh Venkatasubramanian}
+
+\submitdate{}
+\copyrightyear{2005}
+
+% chapter is one level, section and subsection are the next two levels
+\threelevels
+%\dedication{To ...}
+
+%\inputpicturetrue % By Jeff McGough. See uuguide and private thesis.sty
+%\inputpicturefalse % To NOT produce pictures, uncomment this line
+
+\begin{document}
+
+\renewcommand{\topfraction}{1.0}
+\renewcommand{\bottomfraction}{1.0}
+\renewcommand{\textfraction}{0.2}
+\renewcommand{\floatpagefraction}{1.0}
+\setcounter{bottomnumber}{1}
+\setcounter{topnumber}{3}
+
+\frontmatterformat
+\titlepage
+\copyrightpage
+\committeeapproval
+\readingapproval
+\preface{abstract}{Abstract}
+%\dedicationpage
+\tableofcontents
+\listoffigures
+\listoftables
+%\optionalfront{Notation and Symbols}{\input{notation.tex}}
+\preface{acknowledge}{Acknowledgements}
+
+\maintext % start normal page numbering, parts and chapters follow
+
+\include{chap1}%introduction
+
+\include{chap2}%background, related work
+
+\include{chap3}%TIER
+
+\include{chap4}%Linker
+
+\include{chap5}%multi-faceted
+
+%\include{chap6}%evaluation of stratified
+
+\include{chap6}%conclusions 
+
+%\include{appendix01}
+
+
+\numberofappendices=4 % set 0 for none, else number of appendices
+\appendix % chapters, sections are now appendix style
+
+% appendix A
+%\include{appendix1}
+%\include{appendix3}
+%\include{appendix3}
+%\include{appendix3}
+%\include{appendix}
+\include{appendix01}
+\include{appendix02}
+\include{appendix03}
+\include{appendix04}
+
+%\include{appendix_copy}
+%\include{appendix}
+%\include{appendix4}
+
+%\include{chap8}
+
+
+
+
+% The choice of bibliography style is a major decision, jointly made
+% by you, your thesis advisor and the thesis editor. Common choices are
+% "siam", "acm", "amsplain", "plain", "chicago".
+\bibliographystyle{siam}
+%\bibliographystyle{thesis}
+%\bibliography{thesis}
+\bibliography{ruihong}
+
+
+\end{document}
+
+
+
+
+
+
