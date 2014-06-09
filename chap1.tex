@@ -1,0 +1,678 @@
+\chapter{Introduction}
+\label{Chapter:Introduction}
+
+%big story
+%general introduction to the task event extraction
+Events are one important type of information throughout text. 
+Accurately extracting significant events from large volumes of text 
+informs the government, companies and the public regarding possible
+ changing circumstances caused or implied by events. 
+
+
+Event extraction is an information extraction (IE)
+task that involves identifying 
+%noun phrases%
+entities and objects (mainly noun phrases) that represent 
+%different key roles for
+important roles in
+events 
+%in a particular domain.
+of a particular type. The extracted noun phrases are called role fillers of events and 
+they are the participants of events, objects that are involved in events, or properties 
+associated with an event. For example, event extraction
+systems for the terrorism domain identify
+the perpetrators, victims, and targets of terrorism
+events while systems for the management succession domain identify
+the people and companies involved in corporate
+management changes. 
+%meaning
+%Event extraction helps to detect and track events of significance and 
+%informs the government, companies and the public about changes caused by events. 
+
+However, extracting event information completely and accurately is challenging 
+mainly due to the high complexity of discourse phenomena.
+While this task has been studied over the last decades,  
+%However, the current event extraction systems fail to extract many role fillers 
+%and many noun phrases extracted are not correct role fillers in events.
+%classifier/ pattern
+%However, both the accuracy and the coverage of current event extraction systems are limited partly because 
+%the design of most current event extraction systems is based upon two assumptions that are not always true.
+ the performance of current event extraction systems is limited 
+because they mainly consider local context 
+%(mostly from the same sentence as the extracted noun phrase) 
+(mostly isolated sentences) and ignore the influences of wider contexts 
+from the discourse. 
+% and separate event expressions
+%when making extraction decisions.
+My research aims to improve both coverage and accuracy of event extraction performance 
+by exploring discourse-guided models. By incorporating discourse information 
+beyond an individual sentence, the discourse guided models will seek out 
+event information that tends to be overlooked by current event extraction systems 
+and filter out extractions that seem to be valid when viewed locally.  
+%incorporating discourse information beyond an individual sentence 
+%and detecting multiple facets essential to events.
+
+Finding documents that describe a specific type of event is also challenging 
+because of the wide variety and ambiguity of event expressions. 
+My research also aims to accurately identify event relevant documents 
+ by proposing multi-faceted event recognition. Event facets represent 
+event defining characteristics. Multi-faceted event recognition uses 
+event facets, in addition to event expressions, to effectively resolve 
+the complexity of event descriptions.
+
+%\section{Overview of the Research}
+\section{Discourse Guided Event Extraction Architectures}
+%the whole document
+% and leveraging the dependencies among event role fillers.
+%The design of most current event extraction systems is based upon two assumptions.
+
+%The second assumption underlying most traditional event extraction systems is that 
+%role filler extractions are always accompanied by context that explicitly refer to a relevant event and 
+%local context is sufficient to make an event extraction decision.
+%However, many role fillers occur in contexts that do not explicitly mention the event, and those
+%fillers are often overlooked. For example, the perpetrator of a murder may be mentioned in the context 
+%of an arrest, an eyewitness report, or speculation about possible suspects. 
+%Victims may be named in sentences that discuss the aftermath of the event,
+% such as the identification of bodies, transportation of the injured
+% to a hospital, or conclusions drawn from an investigation. 
+%These contexts are not specific to a particular type of event 
+%but tend to occur together with the events in interest, e.g., terrorism events.
+%Role fillers can also be overlooked because a sentence
+%does not appear to be relevant when viewed in isolation.
+Most current event extraction systems 
+%use either a
+%learning-based classifier to label words as role
+%fillers, or lexico-syntactic patterns to extract role
+%fillers from pattern contexts.
+%Both approaches, however, 
+%generally tackle event recognition and role
+%filler extraction at the same time and 
+heavily rely on local contexts
+ and individual event expressions
+when making extraction decisions. 
+%In other words, most event extraction systems 
+They primarily recognize
+contexts that explicitly refer to a relevant event and extract the noun phrases 
+in those contexts as role fillers. 
+For example, a system that extracts information about
+murders will recognize expressions associated with
+murder (e.g., ``killed'', ``assassinated'', or ``shot to
+death'') and extract role fillers from the surrounding
+context. 
+%Relying on local contexts only 
+However, lacking the view of wider context limits the performance of traditional event extraction systems in 
+%the following 
+two aspects. 
+
+%Lacking the view of global contexts limits the performance of traditional event extraction systems. 
+%The limitations are shown as both low recall and low precision of current systems.
+First, the coverage of event extraction systems is limited because many role fillers occur in contexts
+that do not explicitly mention the event, and those
+fillers are often overlooked by current event extraction systems. For example, the perpetrator
+of a murder may be mentioned in the context
+of an arrest, an eyewitness report, or speculation
+about possible suspects. Victims may be named
+in sentences that discuss the aftermath of the event,
+such as the identification of bodies, transportation
+of the injured to a hospital, or conclusions drawn
+from an investigation. I will refer to these types of
+sentences as ``secondary contexts'' because they are
+generally not part of the main event description (``primary contexts'').
+Role fillers in secondary contexts are generally overlooked by current event extraction systems. 
+
+However, extracting information from these secondary contexts indiscriminately
+can be risky because secondary contexts occur with irrelevant events too.
+For example, an arrest can follow a theft instead of a terrorism event.
+This is why most current event extraction systems generally ignore the extractions in secondary contexts. 
+Even within the main event description, a sentence may not 
+appear to be relevant when viewed in isolation. 
+For example, ``He used a gun''. Is the ``gun'' a weapon used in a terrorism event? Depending on the surrounding story context, 
+such a sentence can be seen in the description of a terrorism event, a military operation event, or a common crime; accordingly, 
+``He'' may refer to a terrorist, a soldier or a burglar.
+However, if we know that the larger context is discussing a relevant event, 
+%we are more certain that the secondary contexts are event relevant.  
+then we will be able to extract relevant event information from these contexts and improve the coverage of event extraction systems.
+%details to go to chap3
+%In addition, we observed that documents of the narrative genre are abundant with secondary contexts.
+%Therefore, we adopt a two-pronged strategy for
+%event extraction that handles event narrative documents
+%differently from other documents. We define
+%an event narrative as an article whose main purpose
+%is to report the details of an event. 
+%We search for secondary contexts only in event narratives
+%to aggressively extract role fillers in these stories.
+%Following this key idea, our new event extraction system, called TIER, is able to find role fillers used to be missed by the previous systems and 
+%improves the overall event extraction performance. 
+
+Second, with access to wider context, the accuracy of current event extraction systems can be improved too.
+%The reason is that depending on the larger contexts, 
+%even the contexts which explicitly mention the relevant event may not be truly about the event due to ambiguity and metaphor. 
+%Constrained by the limited view of contexts, 
+Current event extraction systems will extract information 
+if the local context 
+%explicitly refer to a relevant event.
+contains seemingly relevant event keywords or phrases. 
+% event though they are not truly about the event due to ambiguity and metaphor.
+However, depending on the larger context, they may not be 
+%truly about the 
+referring to a relevant event due to ambiguity and metaphor. 
+For example, 
+%people can be injured or killed in many ways (e.g.,
+%vehicle accidents, military engagements, natural disasters,
+%and civilian crime). Someone who is injured or killed should
+%be characterized as a victimof terrorismonly if the discourse
+%is describing a terrorist event. 
+``Obama was attacked'' may lead to
+Obama being extracted as the victim of a physical attack,
+even if the preceding sentences describe a presidential debate
+and the verb ``attacked'' is being used metaphorically.
+
+Both of these problems tell us that it is necessary to 
+develop better performing event extraction systems by modeling the influences of discourse during event extraction. 
+In this dissertation, I will describe two discourse-oriented event extraction architectures that 
+incorporate discourse information into event extraction to improve both extraction coverage and accuracy.
+In the following two subsections, I will briefly describe the design of these two models.
+%I have developed two discourse-oriented event extraction architectures to 
+%incorporate discourse information beyond an individual sentence during event extraction.  
+%The first one, called {\it TIER}, aims to improve the coverage of current event extraction systems by 
+%tackling with {\it secondary contexts} in event descriptions. 
+\subsection{TIER: a Multilayered Event Extraction Architecture}
+The first one, called {\it TIER}, 
+is a multilayered event extraction architecture that performs 
+document level, sentence level and noun phrase level text analysis to progressively
+``zoom in'' on relevant event information. 
+{\it TIER} represents a two-pronged strategy for event extraction that
+handles {\it event narrative} documents differently from other
+documents. I define an event
+narrative as an article whose main purpose is to report the details
+of an event.
+In contrast, I will refer to the documents that mention a relevant
+event somewhere briefly, as fleeting references.
+%  (e.g., a news article that reports on the bombing of a
+% building or the assassination of a politician).
+%  We train a classifier
+% to identify event narrative documents that are relevant to a
+% particular domain (e.g., terrorism).
+%I apply the {\it role-specific sentence classifiers} only to event
+%narratives to aggressively search for
+%role fillers in these stories.
+I search for role fillers only in secondary contexts that occur in event narratives. 
+%However, other types of documents can mention relevant events too.
+%The MUC-4 
+%corpus, for example, includes interviews, speeches, and terrorist
+%propaganda that contain information about terrorist events. 
+%I will refer to these documents as {\it
+%fleeting reference} texts because they mention a relevant event
+%somewhere in the document, albeit briefly. To ensure that relevant
+%information is extracted from \underline{all} documents, I also 
+%apply a conservative extraction process to every document to extract
+%facts from explicit event sentences.  
+\begin{figure}[b]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 6in]{figures/TIER_arch_full_3.eps}
+ \caption{TIER: A Multi-Layered Architecture for Event Extraction}
+\label{TIER_flow_chart}
+\end{figure} 
+
+
+The main idea of {\it TIER} 
+%behind my approach 
+is to analyze documents at multiple
+levels of granularity in order to identify role fillers that occur in
+different types of contexts. My event extraction model (as shown in Figure \ref{TIER_flow_chart}) progressively
+``zooms in'' on relevant information by first identifying the document
+type, then identifying sentences that are likely to contain relevant
+information, and finally analyzing individual noun phrases to identify
+role fillers. At the top level, I train a 
+%text genre
+document classifier to identify event
+narratives. At the middle level, I create two types of
+sentence classifiers.  {\it Event sentence classifiers} identify
+sentences that mention a relevant event, 
+%are associated with relevant events, 
+and {\it
+  role-specific sentence classifiers} identify sentences that contain
+possible role fillers irrespective of whether an event is
+mentioned. At the lowest level, I use {\it role filler extractors} to
+label individual noun phrases as role fillers. 
+As documents
+pass through the pipeline, they are analyzed at different
+levels of granularity. All documents pass
+through the event sentence classifier, and event sentences
+are given to the role filler extractors. Documents
+identified as event narratives additionally pass
+through role-specific sentence classifiers, and the
+role-specific sentences are also given to the role filler
+extractors.
+The key advantage of this architecture is that it allows
+us to search for information using two different principles: (1) we
+look for contexts that directly refer to the event, as per most
+traditional event extraction systems, and (2) we look for secondary
+contexts that are often associated with a specific type of role
+filler in event narratives. Identifying these {\it role-specific contexts} can root out
+important facts would have been otherwise missed. 
+
+
+%The second event extraction architecture, called {\it LINKER}, focuses on improving the accuracy of event extraction while 
+%maintaining a reletively high extraction coverage. 
+\subsection{LINKER: a Bottom-up Event Extraction Architecture}
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 3.5in]{figures/bottom_up_v4.eps}
+ \caption{LINKER: A Bottom-up Architecture for Event Extraction}
+\label{LINKER_flow_chart}
+\end{figure} 
+The second model, called {\it LINKER} (as illustrated in Figure \ref{LINKER_flow_chart}), is a 
+%more principled 
+%more 
+unified discourse-oriented event extraction architecture. 
+%compared to {\it TIER}. 
+%In {\it LINKER}, 
+In addition to a set of local role filler extractors as 
+%the ones 
+normally seen in event extraction systems,  {\it LINKER} uses a single 
+sequentially structured sentence classifier to explicitly model the contextual influences across sentences 
+and identify event-related story contexts.
+% utilizing a series of textual cohesion properties across sentences.
+The structured learning algorithm, conditional random fields (CRFs), explicitly models whether the previous
+sentence is an event context, which captures discourse continuity across sentences.
+%The novelty of LINKER is that it includes a structured sentence classifier to model
+Furthermore, the structured sentence classifier can model 
+% the textual cohesion properties across sentences.
+a variety of discourse information as textual cohesion properties across sentences.
+% are modeled in the structured sentence classifier. 
+% based on both intra-sentential and inter-sentential information. 
+%Compared to TIER, 
+%Discourse information is explored thoroughly in the structured sentence classifier.  
+%The sentence classifier uses a structured learning algorithm, conditional
+%random fields (CRFs).
+Features are designed to capture 
+%a variety of discourse properties that include 
+lexical word
+associations, e.g., it is common to see ``bombed'' in one sentence and ``killed'' in the next sentence 
+because bombing event descriptions are often followed by casualty reports.
+Features are also designed to capture 
+discourse relations across sentences, e.g., if two sentences are in a causal relation, 
+then probably both are event relevant sentences or neither of them is.
+In addition,
+its bottom-up design allows distributional properties of the candidate role fillers within
+and across sentences to be modeled as features. Intuitively, the presence of multiple role
+fillers within a sentence or in the preceding sentence is a
+strong indication that a relevant event is being discussed.
+
+In {\it LINKER}, the sentence classifier sequentially reads a
+story and determines which sentences contain event
+information based on both the local and preceding contexts. 
+Then, the structured sentence classifier and the set of local role filler extractors are combined by extracting only the candidate role
+fillers that occur in sentences that represent event contexts, as determined by the sentence classifier. 
+%I have done studies showing that there are two main types of event relevant documents, event narratives and fleeting references, and 
+%the insufficient event contexts  are commonly seen in one type of event relevant documents, the event narratives. 
+%By my definitions, event narratives are the articles whose main purpose is to report the details of an event while 
+%fleeting references are the documents that mention a relevant event somewhere in the document, albeit briefly. 
+%To accurately extract these role fillers, the event extraction systems should be able to associate these contexts with the event in interest.
+%Therefore, I propose two discourse informed event extraction architectures that 
+%can go beyond individaul sentence analysis and model the influences of discourse during event extraction.
+
+\section{Multi-faceted Event Recognition}
+%full/deep event analysis is expensive, minor point, accuracy: bigger point
+Before giving documents to sophisticated event extraction systems, 
+we want to ask if the documents actually contain any relevant events. 
+Therefore, I also study event recognition that 
+aims to identify documents describing a specific
+type of event.  
+%While event extraction studies aim to produce full representations of events, 
+%event recognition aims to identify documents that describe a specific
+%type of event.  
+Accurate event recognition will improve event extraction accuracy 
+because any extractions from documents that do not contain a relevant event 
+will be false. 
+%and hurt event extraction accuracy. 
+%Furthermore, event extraction 
+Furthermore, event recognition is essential to many other event oriented applications.
+%, such as tracking events.
+For example,   
+with accurate event recognition, we can detect the first occurrences and
+the following mentions of a particular type of 
+%events, 
+event, thus we can track the dynamics of
+%certain type of events.
+events over time.
+
+Event recognition is a highly challenging task due to the high
+complexity and variety of event descriptions.
+%Another big flaw of most current event extraction systems is that 
+%they mainly detect events by searching for 
+%individual 
+%event expressions alone.
+It is tempting to assume that event keywords
+are sufficient to identify documents that discuss instances
+of an event. But event words are rarely reliable
+on their own. 
+For example, consider the challenge
+of finding documents about civil unrest. The words {\it ``strike''},
+{\it ``rally''}, and {\it ``riot''} refer to common types of civil unrest, but
+they frequently refer to other things as well.  A  strike can refer
+to a military event or a sporting event (e.g., {\it ``air
+strike''}, {\it ``bowling strike''}), a rally can be a race or a
+spirited exchange (e.g.,{\it ``car rally''}, {\it ``tennis rally''}), and a riot
+can refer to something funny (e.g., {\it ``she's a riot''}).
+% For natural disaster events, words like ``hurricane'' and ``tsunami''
+% seem like relatively unambiguous event keywords. But both terms can
+% also refer to sports teams, Hurricane is a city in Utah, and 
+% Tsunami Research Center, tsunami of strangers, Hurricane Relief Fund
+Event keywords also appear in general discussions that do not
+mention a specific event (e.g., {\it ``37 states
+prohibit teacher strikes''} or {\it ``The fine for inciting a riot is \$1,000''}).  
+%Due to the ambiguity of single event keywords, the accuracy of event recognition is much degraded. 
+%Second, event keywords can be mentioned in general discussions and
+%used metophorically.%true to both keywords and phrases
+Furthermore, many relevant documents are not easy to recognize
+because events can be described with complex expressions that do not include 
+event keywords. %recall misses  
+For example, 
+{\it ``took to the streets''}, {\it ``walked off their jobs''} and {\it ``stormed
+ parliament''} often describe civil unrest. 
+%This is problematic because many times, event expressions alone will not 
+%unambiguously indicate an event of a particular type. 
+%examples for three facets
+
+I propose multi-faceted event recognition to accurately recognize 
+event descriptions in text by identifying event
+expressions as well as event facets, which are defining characteristics of the event.
+%Event facets, which are defining characteristics of the event, 
+%I call them ``event facets'', 
+Event facets are essential to distinguish one type of event from another. 
+%I define ``event facets'' as defining characteristics of the event. 
+%Important event facets include agents, effects and purpose of events.
+For example, given the event expression ``hit the village'', 
+depending on the agents, it might refer to a natural disaster event if the agent is ``The flooding'', or 
+it might be describing an air strike if the agent is ``The military bombs''. 
+Given the event expression ``attacked'', 
+depending on ``who'' were ``attacked'' as the patient, 
+it can be associated with a terrorism event (``civilians'') 
+or a general military operation (``soldiers'').
+%if the extraction ``PEOPLE'' refer to ``civilians'', then it probably is associated with a terrorism events. 
+%but if ``PEOPLE'' refer to ``soldiers'', then probably it is involved in a general military operation. 
+%Another example is that given the event expression ``sat in a circle'', 
+%if it is followed with an infinitive attachment ``to have the Friday beer'' to show the purpose, 
+%then the text might be talking about a party, 
+%however, if the attachment changes to ``to demand a salary raise'', then it might be reporting a civil unrest event.  
+Furthermore, event facets are so powerful that frequently, 
+events can be recognized 
+by only seeing multiple types of event facet information, 
+%with no 
+without any event expression detected. 
+For example, to identify documents describing civil unrest events, 
+we feel confident to claim that a document is relevant if we pinpoint both the agent term ``coal miners'' 
+and the purpose phrase ``press for higher wages'', event without detecting any event keyword such as 
+``rally'' and ``strike''.
+%Furthermore, before diving into the documents seeking for relevant event information, 
+%better event extraction performance is achievable by carrying out more precise event document recognition. 
+%In event extraction research, some data sets only include documents that describe
+%relevant events (e.g., well-known data sets for the domains of
+%corporate acquisitions~\cite{freitag-acl98,freitag-aaai00,finn04}, job
+%postings \cite{califf03,freitag-aaai00}, and seminar announcements
+%\cite{freitag-acl98,ciravegna01,chieu02,finn04,gu06}.  But
+%many IE data sets present a more realistic task where the IE system
+%must determine whether a relevant event is present in the document,
+%and if so, extract its role fillers. Most of the
+%Message Understanding Conference data sets represent this type of
+%event extraction task, containing (roughly) a 50/50 mix of relevant and
+%irrelevant documents (e.g., MUC-3, MUC-4, MUC-6, and MUC-7 \cite{hirschman98}).
+%In the latter and more realistic setting, 
+%%The first assumption is that \underline{all} the documents to be processed by event extraction systems contain event descriptions. 
+%%However, 
+%the documents fed into event extraction systems are generally acquired automatically using information retrieval (IR) techniques and 
+%due to the event keyword ambiguities, many retrieved documents that contain keywords of one type of event in interest
+%can be about completly different types of event. 
+%For example, while the words ``strike'', ``rally'', and ``riot'' refer to common
+%types of civil unrest, they frequently refer to
+%other things as well. A strike can refer
+%to a military event or a sporting event (e.g., {\it ``air
+%strike''}, {\it ``bowling strike''}), a rally can refer to a race or a
+%spirited exchange (e.g.,{\it ``car rally''}, {\it ``tennis rally''}), and a riot
+%can refer to someone or something that is funny (e.g., {\it ``she's a riot''}).
+%%many event irrelevant documents tend to be retrieved because they contain event keywords and are seemingly event relevant. 
+%The retrieved event irrelevant documents will induce false extractions in event extraction systems.
+
+%Therefore, I propose an multi-faceted event recognition approach that is 
+%aware of event essential characteristics and able to detect events of a particular type accurately. 
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ %\includegraphics[width = 5in]{figures/flow-chart_4.eps}
+  \includegraphics[width = 5in]{figures/faceted/flow-chart_cu.eps}
+ \caption{Bootstrapped Learning of Event Dictionaries, illustrated with Agents and Purpose as Event Facets.}
+\label{multi_faceted_flow_chart}
+\end{figure} 
+
+
+%I also propose a 
+The third component of my research is
+%co-training 
+bootstrapping framework to automatically learn event expressions as well as essential facets of events. 
+%alternatively.
+The learning algorithm relies on limited supervision, specifically, a handful of event keywords 
+that are used to create a pseudo domain-specific text collection 
+from a broad-coverage corpus, and several seed terms for each facet to be learned. 
+%Suppose we focus on two event facets, agent and purpose.
+%Experiments have been done on civil unrest events and the two event facets identified there are agent and purpose. 
+% from a large text collection using a small amount of seeding. 
+The learning algorithm exploits the observation that event expressions and event facet information 
+%agents, and purpose phrases 
+often appear together in sentences that introduce an event. 
+Furthermore, seeing more than one piece of event information in a sentence tends to 
+validate that the sentence is an event 
+%introductory 
+sentence and imply that 
+additional event information may also be found in the same sentence.  
+%The learning process uses unannotated texts, a few event
+%keywords, and seed terms for each event facet associated with the event. 
+%The event keywords will be used to create a pseudo domain-specific collection of articles  
+%that are selected from a broad coverage corpus and contain at least one event keyword. 
+Therefore, in the first step, I identify probable event sentences that contain multiple types of 
+event facet information and extract event expressions 
+% from syntactic positions
+based on dependency relations with
+event facet phrases. The harvested event expressions are added
+to an event phrase dictionary. In the second step, 
+% the event phrase dictionary is used to learn agent and purpose
+% phrases. 
+new phrases of an event facet are extracted
+from sentences containing an event phrase and phrases of the other event facets. 
+The newly harvested event facet phrases are 
+added to event facet dictionaries. 
+The bootstrapping algorithm ricochets back and forth, alternately 
+learning new event phrases 
+%in the first step 
+and learning new 
+%agent/purpose 
+event facet phrases
+%in the second step
+, in
+an iterative process. 
+%Take an example type of events with agents and purpose as its event facets, 
+For example, civil unrest events are generally initiated by certain population groups, 
+e.g., ``emplyees'', and with certain purpose, e.g., ``demanding for better working conditions''. 
+Therefore, I identify agents and purposes as two facets of civil unrest events.  
+To learn event expressions and event facet phrases, 
+Figure \ref{multi_faceted_flow_chart} illustrates how the bootstrapping algorithm works.
+
+%The learned event expressions and event facet information can be used to improve event extraction performance in different levels of text processing. 
+%First, they can be used to detect documents containing events of a particular type.
+%Second, 
+%the documents that describe events can be further categorized based on 
+%the densities and positions that event expressions and event facet information are observed in text, 
+%and accordingly, different event extraction strategies may be applied depending on the document categories.
+%Third, event expressions and event facet information can be used to extract part of the event information because
+%some event role fillers are contained within them.
+
+%Most of the Message Understanding Conference data sets represent this type of
+%event extraction task, containing (roughly) a 50/50 mix of relevant and
+%irrelevant documents (e.g., MUC-3, MUC-4, MUC-6, and MUC-7 \cite{hirschman98})
+
+
+\section{Claims and Contributions}
+
+  % The thesis statement for this research
+The primary contributions of this research are as follows:
+%  \subsection{Thesis Statement}
+%  \label{sec:thesis-statement}
+  
+%  {\em{Accuracy and coverage of event extraction can be improved by multi-faceted event recognition and discourse informed event context finding.
+%incorporating discourse information across sentences 
+%%when making extraction decisions and 
+%%making multiple extraction decisions simultaneously by
+%modeling correlations between role fillers
+%% associated with the same event or related events
+%}
+%}
+  \begin{enumerate}
+    \item[1] {\em{Both event extraction coverage and accuracy can be improved by 
+    incorporating discourse information across sentences 
+    %in event extraction models.
+    to recognize event contexts before applying local extraction models.}}
+
+Event story telling generally spans over a text discourse. Accordingly, automatic event extraction systems should be able to 
+%go beyond processing individual sentences and
+ model discourse phenomena to accurately locate pieces of event information in text. 
+%In this research, I focused on addressing the major limitation of 
+%most current event extraction systems that generally process one sentence each time,  
+However, current event extraction systems generally process one sentence a time and make extraction decisions relying on event clues 
+from a limited text span as within the sentence.
+Due to lacking a global view of text contents, the current event extraction systems suffer from insufficient coverage and accuracy. 
+%Consequently, event information that is not accompanied by clear event indicators in proximate contexts tend to be overlooked by the current event extraction systems. 
+%Furthermore, the current systems produce wrong extractions that seem relevant when viewed locally. 
+In this research, I focus on 
+%addressing the issue of second contexts in event descriptions and 
+improving extraction performance by incorporating discourse information across sentences 
+%in discourse guided event extraction models. 
+to recognize event contexts before applying local extraction models
+First, I designed a multi-layered event extraction model, called {\it TIER}, 
+to seek out event information that appear in secondary event contexts. 
+The main idea of {\it TIER} is to zoom in on relevant event information, 
+by using a document classifier and two types of sentence classifiers to analyze text 
+at multiple granularities.
+Later, I designed a 
+%more principled 
+unified discourse guided event extraction architecture, {\it LINKER}, 
+that explicitly model textual cohesion properties across sentences
+ to accurately find out event related contexts, using a single structured sentence classifier. 
+Evaluation on two event domains shows that my discourse guided event extraction architectures have improved both 
+event extraction coverage and accuracy.
+
+    \item[2] {\em{Event defining characteristics (event facets), in addition to event expressions, can be used to accurately identify documents describing 
+a particular type of event.}}
+
+Finding documents that describe a specific type of event is a 
+%highly 
+challenging task due to the high complexity and variety
+of event descriptions. Event keywords tend to be ambiguous and are not sufficient to identify documents that discuss 
+event instances of a particular type.
+I propose multi-faceted event recognition to accurately recognize event descriptions in
+text by identifying event expressions as well as event facets, which are defining characteristics of the event. 
+Event facets, such as agents, purpose and effects of events, are essential to distinguish one type of event from another.
+I also propose a bootstrapping framework to automatically learn event expressions as
+well as essential facets of events, requiring only unannotated text and minimal human supervision.
+Evaluation on two event domains shows that multi-faceted event recognition can yield high accuracy.
+
+
+  \end{enumerate}
+
+  % Goals and objectives of the proposed research.
+%  \subsection{Goals \& Objectives}
+%  \label{sec:goals-and-objectives}
+  
+%  The goals and objectives of this research are the following:
+%  \begin{enumerate}
+%    \item[(a)] To design new event extraction models to incorporate discourse information across sentences.
+%    %\item[(b)] To use multi-faceted event document recognition to achieve accurate event document identification.
+%    \item[(c)] To learn and utilize event facet information to categorize event documents and extract event information. 
+
+%    %\item[(c)] 
+%  \end{enumerate}
+
+  % Finally, the primary idea of this thesis -- needs a rewrite
+%   There is a simplicity and elegance in having a single model that takes on both
+%   of the responsibilities of IE. However, the hypothesis of this research is that
+%   there are benefits to decoupling these into separate tasks. This research
+%   investigates an approach for IE, which involves two passes over a document. In
+%   the first pass, an automated system separates regions of text as being relevant
+%   or irrelevant to the domain of interest. In the second pass, a number of local
+%   clues associated with spans of text within these regions are used for the
+%   extraction of some of these spans as event information. This very basic idea
+%   has numerous ramifications, and motivates several possibilities for better IE,
+%   which would not have been possible with a monolithic system. This proposal
+%   discusses the design and implementation of this two-phase system in acute
+%   detail, and additionally, enumerates various possibilities for IE performance
+%   improvement enabled by this approach.
+
+
+\section{Navigating this Dissertation}
+The rest of this dissertation is summarized as follows. 
+  \begin{itemize}
+   \item Chapter \ref{Chapter:Background} describes existing work in event extraction and recognition studies.
+This chapter explains the limitations of current event extraction and recognition systems 
+and demonstrates how the research presented in this dissertation contributes in addressing these limitations. 
+
+   \item Chapter \ref{Chapter:TIER} presents the details in designing
+   %and implementing 
+   {\it TIER}, 
+the multilayered event extraction architecture, which can seek out event information 
+from seconday event contexts. To motivate, I will first discuss 
+secondary contexts, in contrast with primary event contexts. 
+%that are distinguished from primary event contexts, are discussed. 
+%In addition, 
+Then, I will demonstrate two types of documents that mention relevant events,  
+event narratives and fleeting references, 
+%identified as two types of documents 
+%that mention relevant events, are also discussed. 
+with respect to how event information was conveyed in text.  
+Then this chapter presents design 
+%and implementation 
+details of the four components 
+that constitute the multilayered event extraction architecture. 
+  
+
+   \item Chapter \ref{Chapter:LINKER} presents the details in designing 
+   %and implementing the more principled
+   the unified 
+discourse guided event extraction architecture, {\it LINKER}. This chapter illustrates 
+the bottom up system design and discusses the main idea that 
+uses a single structured event context 
+recognizer to identify all the event related sentences in a document. 
+After that, this chapter elaborates the linguistic discourse features that are used in the 
+structured event context recognizer to 
+capture textual cohesion properties aross sentences.
+
+
+   \item Chapter \ref{Chapter:Multi-faceted} demonstrates multi-faceted event recognition approach. This chapter 
+discusses the insufficiency of using event keywords for event recognition and 
+illustrates how event defining characteristics (facets) can be helpful to recognize events of a particular type in text.
+This chapter includes a thorough discussion of event facets in a variety of events. 
+Then this chapter describes details of the bootstrapping framework that is effective in 
+acquiring both event expression and event facet information from unannotated text. 
+In the evaluation section, I also examines whether 
+multi-faceted event recognition 
+can be used to improve event extraction performance, 
+especially with respect to extraction accuracy. 
+
+%   \item Chapter \ref{Chapter:Stratified} examines whether the automatically acquired event expression and event facet information 
+%for event recognition purpose  
+%can benefit event extraction, via filtering and categorizing documents based on the number of relevant events 
+%mentioned in the documents. This chapter presents empirical evaluations using existing event extraction 
+%datasets on two event domains.
+
+   \item Chapter \ref{Chapter:ConclusionsAndFutureDirections} discusses the conclusions that we can draw from the dissertation. 
+Following the conclusions, this chapter 
+%sheds light on 
+suggests the future directions that can potentially lead to 
+further progress in event oriented information extraction research.
+ 
+  \end{itemize}
+

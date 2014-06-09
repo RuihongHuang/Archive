@@ -1,0 +1,213 @@
+\chapter{CU Event Role Filler Annotation Guidelines}
+\label{Appendix:EventRoleFillerAnnotationGuidelines}
+This appendix lists the civil unrest event role filler annotation guidelines that were provided
+to the annotators.
+
+%\section{Civil Unrest Event Definition}
+
+%Civil unrest (CU) is a broad term that is typically used by the media or
+%law enforcement to describe a form of public disturbance caused by a
+%group of people for a purpose. Civil unrest events include activities to protest
+%against major socio-political problems, events of activism to support
+%a cause (e.g., peace rallies or large-scale marches to support a
+%prominent figure), and events to promote changes in government or
+%business affairs (e.g., large gatherings to rally for higher wages).
+%Types of civil unrest can include, but are not necessarily limited to:
+%strikes, rallies, sit-ins and other forms of obstructions, riots,
+%sabotage, and other forms of public disturbance motivated by a
+%cause. It is intended to be a demonstration to the public, the
+%government, or an institution (e.g., business or educational sectors),
+%but can sometimes escalate into general chaos.\\
+
+%{\bf Civil Unrest Events to be Considered}
+%CU Events to be Considered:
+%\begin{enumerate}
+%\item[{\bf 1.}] According to the definition, CU events do not include war, ethnic fightings 
+%or fightings involving armed parties only. 
+%\item[{\bf 2.}] Descriptions of currently on-going or recently (within one year) 
+%happened CU events should all be examined for annotations. Old CU events 
+%that happened more than one year ago from the date when the article was 
+%published should not be examined for annotations. 
+%\item[{\bf 3.}] In addition to the CU events that actually happen, descriptions of 
+%threatened and planned CU events that may happen should also be examined 
+%for annotations even if there is uncertainty or they are mentioned conditionally. 
+%However, CU event descriptions of threatened and planned CU events that 
+%will definitely not happen should not be examined for annotations.
+%\item[{\bf 4.}] Event summary information that is synthesized from two or more events 
+%should NOT be annotated.
+%\end{enumerate}
+
+\section{Annotation Task Definition}
+
+You will need to read a set of news articles and identify the CU event 
+descriptions. Specifically, you need to find out phrases in text that 
+describe CU events and put them into their corresponding slots. 
+Each slot indicates one type of event information, such as locations, 
+agents, causes and damages of CU events.\\
+
+{\bf IMPORTANT}
+\begin{enumerate}
+\item[{\bf 1.}] More than one event can be described in an article, however, only one set of 
+event role slots are to be filled out. Therefore, you should put all the phrases 
+fulfilling a specific event role into the same slot EVEN THEY ARE FROM DIFFERENT EVENTS.
+\item[{\bf 2.}] Events that are described in an article are often related. If the same entity 
+or object is involved and plays the same role in multiple events, you should only 
+annotate the mentions across all its mentions that are significantly different in 
+lexical forms.
+\end{enumerate}
+
+
+
+\section{The Event Slots to be Annotated}
+Eight event slots will be considered for annotations.\\
+
+\begin{enumerate}
+
+\item[{\bf (1)}] {\bf Event type (Closed Set)}
+
+Instead of labeling strings in text like (1), choose
+ event types from the following CU types:\\
+
+STRIKE(S) -- consists of refusing to work.\\
+MARCH(ES) -- consists of moving from one place to another place.\\
+SIT-IN(S)/OCCUPATION(S) -- consists of taking up some space and thus disturbing the 
+regular activities that require the space.\\
+OTHER(S) -- other forms of protest(s) or demonstration(s), such as rally (rallies), 
+riot(s), sabotage(s), etc. \\
+
+If one CU event includes activities of type STRIKE (or MARCH, or OCCUPATION), 
+select STRIKE (or MARCH, or OCCUPATION) as the event type, even the event 
+described also includes activities of other types. If one event includes 
+multiple types of activities, e.g. both STRIKE and OCCUPATION, select all the 
+appropriate types. Select types for all CU events described in an article, e.g., 
+select both STRIKE and MARCH if two CU events were described in an article, one 
+event is of type STRIKE and another is of type MARCH. You should select OTHER 
+if none of the CU events described in an article includes activities of any of 
+the first three types. 
+
+\item[{\bf (2)}] {\bf Agent/Population}
+
+The population GROUPS who initiate, lead or join to strengthen 
+the CU events. If there are multiples references to roughly the same population group, 
+label all the ones that are in different lexical forms, including the general mention terms 
+such as "the protesters".
+
+\item[{\bf (3)}] {\bf Key Issue} 
+
+The most essential issues that motivate the CU events. 
+Sometimes, you will see multiple issues/causes that are likely to be motivating 
+the CU events, but ONLY label the MOST direct/explicit one. Key issues can be 
+natural resources, abstract concepts, actions, decisions and events that are 
+demanded or protested against or others. 
+For example, in
+  \begin{quote}
+ {\em The workers went on strike to press for higher wages.}
+  \end{quote}
+  you should  put ``higher wages'' as the key issue.
+  
+Issues can be described as base 
+noun phrases and base verb phrases, if you think parts of the essential issues 
+are included in pp attachments (if any) of the base noun/verb phrases, label 
+the pp attachments too, furthermore, if you think a complete clause is needed 
+to describe an issue, label the full clause. 
+For instance, consider
+  \begin{quote}
+   {\em The demonstrators protest against Spain's proposal to legalize 
+ gay marriage.}
+  \end{quote}
+you should put ``legalize gay marriage'' as the key issue without 
+ including ``Spain\'s proposal to'' because ``Spain\'s proposal to'' only signify the 
+ source (Spain) and the state (being proposed) of the key issue.
+ 
+ Another example is as follows,
+  \begin{quote}
+   {\em The youth of Lebanon have occupied the front line of the "Cedar Revolution" 
+ gripping the country since the February 14 assassination of popular former prime 
+ minister Rafiq Hariri.}
+  \end{quote}
+you should label ``the February 14 assassination of popular 
+ former prime minister Rafiq Hariri'' as the key issue. 
+ 
+If there are multiple references (can be 
+in any of the above three forms) to the essential issue (should be only one in content 
+for one event), please label all the ones that are in different lexical forms.
+
+  
+
+
+\item[{\bf (4)}] {\bf Site\/Facility}
+
+A human constructed facility where a CU event takes place. 
+A site can be a plaza, a shopping mall, a mosque, a bridge, a hospital or an university.
+
+\item[{\bf (5)}] {\bf Location}
+
+NAMED geographical regions/areas where a CU event takes place. 
+A location can be a city (e.g. ``Beijing''), a country (e.g. U.S.) or other named places 
+(e.g. Antelope Island). Only label the location names themselves. You should only 
+consider the locations that appear in the context of a CU event. You should not consider 
+the locations that are embedded in organization names. 
+For instance, in 
+  \begin{quote}
+   {\em 25,000 opposition supporters demonstrated in Lome, the capital of Togo.}
+  \end{quote}
+ You should label ``Lome'' and ``Togo'' as two locations and put them in two lines. 
+
+\item[{\bf (6)}] {\bf HumanEffects (Injuries and Deaths)}
+
+The casualties that are {\em due to the CU events}, 
+can refer to any people that are injured or died in the civil unrest events, including 
+{\em both agents and other types of people}. If you are not certain based on the text descriptions 
+that some people were injured or died, do not annotate them. 
+For example, if you see 
+  \begin{quote}
+   {\em Two guards was hit by stones.}
+  \end{quote}
+in the context of the CU events, 
+ ``Two guards'' should be annotated because people generally get hurt when hit by stones.
+ However, given 
+   \begin{quote}
+    {\em A policeman was hit by eggs.}
+   \end{quote}
+in the context of the CU events, 
+``A policeman'' should not be annotated because people generally would not be hurt when hit by eggs.
+
+\item[{\bf (7)}] {\bf PhysicalEffects (Damages or Destructions)} 
+
+Buildings or property that are physically 
+damaged or destroyed {\em due to the CU events}. 
+For instance, given 
+\begin{quote}
+ {\em They stormed an airport, damaged the VIP lounge and surged 
+ onto the runway to prevent a flight taking off.}
+\end{quote}
+in the context of the CU events, 
+ you should label ``the VIP lounge'' as one filler. 
+
+\item[{\bf (8)}] {\bf Instruments/Weapons} 
+
+Anything that is used by {\em both agents and other types of people} 
+{em during the CU events} with the intent to injure others, damage property, control the 
+crowd or defend themselves. Weapons can be stones, bombs batons, and teargas. 
+For instance, if you see 
+\begin{quote}
+ {\em Police used tear gas, fire hoses and pepper spray to 
+ hold back hundreds of demonstrators led by militant Korean farmers, some of whom were 
+ armed with bamboo sticks and metal bars .}
+\end{quote}
+ in the context of the CU events, 
+ you should label ``tear gas'', ``fire hoses'', ``pepper spray'', ``bamboo sticks'' 
+ and ``metal bars'' as the weapons. 
+ \end{enumerate}
+
+{\bf NOTES}
+\begin{enumerate}
+\item[{\bf 1.}] Please label appropriate strings in both headlines and body texts, 
+but with preference to strings from body texts. 
+If string A from the headline and string B from the body text are equally informative 
+to be a role filler, please label string B instead of A. If an appropriate role filler C
+is only seen in the headline, please label C. 
+\item[{\bf 2.}] For slots Agent/Population, Site/Facility, HumanEffects, PhysicalEffects and 
+Instruments/Weapons, annotations should be complete base noun phrases that include 
+head nouns, modifiers, determiners and articles. 
+\end{enumerate}

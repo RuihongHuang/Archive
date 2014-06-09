@@ -1,0 +1,128 @@
+% Complete in less than 350 words.
+
+%This file is used to maintain the abstract.  Until something is properly written here,
+%the abstract shall be undergoing initial phases of contemplation. Please be patient as adequate
+%time is required to allow this section to properly bloom into its full existance.
+
+Events are one important type of information throughout the text. 
+%Accurately extracting significant events from large volumes of text 
+%informs the government, companies and the public regarding 
+%possible changing circumstances caused or implied by events. 
+Event extraction 
+%in natural language processing 
+is an information extraction (IE)
+task that involves identifying 
+%noun phrases%
+entities and objects (mainly noun phrases) that represent 
+%different key roles for
+important roles in
+events 
+%in a particular domain.
+of a particular type.
+However, the extraction performance of current event extraction systems 
+is limited because they mainly consider local context 
+%(mostly from the same sentence as the extracted noun phrase) 
+(mostly isolated sentences) when making extraction decisions. 
+
+%because current event extraction systems mainly consider local context 
+%(mostly from the same sentence as the extracted noun phrase) 
+%(mostly isolated sentences) when making extraction decisions, 
+%and ignore the influences of wider contexts. 
+%their performance is limited on two aspects. 
+%First, the coverage of event extraction systems is 
+%limited because many role fillers occur in contexts
+%that do not explicitly mention the event. 
+%Second, the accuracy of current event extraction systems is 
+%also limited because 
+%many local context 
+%explicitly refer to a relevant event.
+%contains 
+%seemingly relevant event keywords or phrases may not 
+%be 
+%truly about the 
+%referring to a relevant event due to ambiguity and metaphor. 
+
+
+%from the discourse. 
+My research first aims to improve both coverage and accuracy of event extraction performance 
+%by exploring discourse guided models.
+by incorporating discourse information 
+beyond an individual sentence 
+%to effectively identify event contexts.  
+%Extracting event information completely and accurately 
+%is challenging mainly due to the high complexity of 
+%discourse phenomena. 
+%In this dissertation, I present 
+%two discourse-guided event extraction architectures 
+%that explore evidence and clues from wider discourse 
+to seek out or validate pieces of event descriptions. 
+%Specifically, 
+{\it TIER} is a multilayered event extraction architecture 
+that performs text analysis at multiple granularities 
+to progressively "zoom in" on relevant event information. 
+%By 
+%{\it TIER} represents a two-pronged strategy for event extraction that 
+%distinguish two types of documents that mention the relevant events 
+%{\it event narratives}  v.s {\it fleeting references}, 
+%and only consider to extract information from secondary contexts in 
+%{\it event narratives}. 
+%incorporates both document genre
+%and role-specific context recognition 
+%to extract event formation from a variety of different contexts.
+{\it LINKER} is a unified discourse-guided approach 
+%that models textual cohesion properties in a single 
+%structured sentence classifier. 
+that includes a structured sentence classifier 
+to sequentially read a
+story and determine which sentences contain event
+information based on both the local and preceding contexts. 
+%The structured sentence classifier 
+%uses well designed features to 
+%can model textual cohesion properties across sentences, 
+%including lexical word
+%associations, discourse relations across sentences and 
+%distributional properties of the candidate role fillers within
+%and across sentences. 
+Experimental results on two distinct event domains 
+show that compared to previous 
+event extraction systems, {\it TIER} 
+can recover more event information, while maintaining a good extraction precision.
+and {\it LINKER} 
+can further improve extraction accuracy.  
+%and the overall extraction performance. 
+%significantly outperformed 
+%the previous event extraction systems and my first 
+%discourse-guided event extraction model {\it TIER}.
+
+Another issue of current event extraction systems is 
+that they do not distinguish if the documents being 
+analyzed contain any relevant information or not. 
+Processing documents that do not mention a relevant event 
+%for extraction purpose 
+is 
+%meaningless and 
+a waste of computing resources and 
+%any extractions from event irrelevant documents 
+%that do not contain a relevant event 
+%will be false and hurt event extraction accuracy.
+can affect extraction accuracy negatively 
+%Furthermore, 
+%accurate event recognition will improve event extraction accuracy 
+because any extractions from event irrelevant documents
+will be false. 
+However, finding documents that describe a specific type of event 
+is also challenging because of the wide variety and 
+ambiguity of event expressions. 
+In this dissertation, I present 
+the multi-faceted event recognition approach that uses 
+event defining characteristics (facets), 
+in addition to event expressions, to effectively 
+resolve the complexity of event descriptions. I also 
+present a novel bootstrapping algorithm to automatically 
+learn event expressions as well as facets of events, 
+which requires minimal human supervision. 
+Experimental results show that the multi-faceted event recognition approach 
+can effectively identify documents that describe a particular type of event and 
+make event extraction systems more precise. 
+%from unannotated texts. 
+%which will enable fast configurations of domain-specific event detection systems.

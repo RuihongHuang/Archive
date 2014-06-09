@@ -1,0 +1,1170 @@
+\chapter{{\it LINKER}: a Principled Discourse-Guided Event Extraction Architecture}
+\label{Chapter:LINKER}
+As described in the previous section, TIER focuses on improving the recall of event extraction 
+performance by seeking out event information from secondary contexts. 
+While TIER is conservative when extracting information from secondary contexts 
+by limiting the extraction from secondary contexts 
+within event narrative documents only, 
+TIER essentially assumes that the primary contexts that 
+%explicitly refer to relevant events 
+mention event keywords or event phrases 
+are reliable and will always be examined further 
+for extraction purposes.  However, depending on the larger context, 
+the seemingly relevant local context may not be 
+%truly about the 
+referring to a relevant event due to ambiguity and metaphor. For example, ``Obama was
+attacked'' may lead to Obama being extracted as the victim of a
+physical attack, even if the preceding sentences describe a
+presidential debate and the verb ``attacked'' is being used
+metaphorically. 
+Therefore, both primary contexts and secondary contexts 
+needed to be validated and strengthened by looking beyond 
+the current sentence and incorporating contextual influence 
+from a wider discourse, including the preceding and following 
+sentences of the current sentence.  
+
+By design, TIER uses two types of sentence classifiers, 
+{\it event sentence classifier} and {\it role-specific sentence classifier} 
+to identify event information occuring in a variety of different event contexts. 
+In addition, observing that event descriptions in event narratives 
+and fleeting references are different in nature, 
+TIER includes a document classifier to identify event narratives too. 
+Together with the set of local role filler extractors, the four components 
+are responsible to analyze texts in multiple granularities.
+Note that all the components can be trained independently, 
+therefore, one unique feature of TIER is that it is well modulized and 
+each component is easily trained.
+Logically, TIER distributes the text processing burden to four components 
+and arrange them in a novel way to extract event information effectively. 
+
+However, due to the modularity, {\it TIER} is incapable of 
+capturing content flows in the discourse level. 
+To address the limitations of {\it TIER}, I will present my bottom-up 
+event extraction architecture, called {\it LINKER}, that can explicitly 
+model textual cohesion properties across sentences.
+%In addition to 
+{\it LINKER} includes a single sequentially structured
+  sentence classifier that identifies event-related story
+  contexts. The sentence classifier uses lexical associations and
+  discourse relations across sentences, as well as domain-specific
+  distributions of candidate role fillers within and across sentences 
+  to identify all the event contexts.
+  %in a pass.
+
+In the following sections, I will first depict the 
+bottom-up design of {\it LINKER}, 
+then I will describe in detail the different types of features 
+that are used in the structured sentence classifier. 
+%the high le and describe details designing 
+%the bottom-up event extraction architecture. 
+Finally, I will present the evaluation results of {\it LINKER} on 
+the same two event extraction datasets as used in Chapter \ref{Chapter:TIER}
+
+\begin{figure}[htbp]
+ \centering
+ \includegraphics[height = 3.5in]{figures/bottom_up_v4.eps}
+ \caption{A Bottom-up Architecture for Event Extraction}
+\label{Big-Pic}
+\end{figure}
+
+\section{LINKER: a bottom-up event extraction architecture}
+
+To model contextual influences across sentences, 
+I propose a bottom-up approach for event extraction, called {\it LINKER}, that 
+aggressively
+identifies {\it candidate role fillers} 
+%emnlp
+%% (overgenerated)
+%emnlp
+based on local
+(intra-sentential) context, and then uses distributional properties of
+the candidate role fillers as well as other discourse features to
+model textual cohesion across sentences.  This event extraction
+architecture has two components: (1) a set of local role
+filler extractors, and (2) a sequential sentence classifier that identifies
+event-related story contexts. 
+% based on both intra-sentential and inter-sentential information. 
+The novel component is the sentence classifier, which uses a structured learning algorithm, conditional
+random fields (CRFs), and features that capture lexical word
+associations and discourse relations across sentences, as well as
+distributional properties of the candidate role fillers within
+and across sentences. 
+The sentence classifier sequentially reads a
+story and determines which sentences contain event
+information based on both the local and preceding contexts. 
+% These two components provide two different sources of evidence 
+% that are ultimately 
+% decide whether a noun phrase fills an event role.
+The two modules are combined by extracting only the candidate role
+fillers that occur in sentences that represent event contexts, as determined by the sentence classifier. 
+
+My event extraction model involves two processes that each focus on a
+different aspect of the problem.
+%ruihong
+The left side of Figure\ref{Big-Pic} shows the two
+%ruihong
+components and illustrates how they interact. The top component
+on the left is a set of traditional role filler detectors, one for each
+event role. This component identifies candidate role
+fillers based on the immediate context surrounding a noun
+phrase. These role fillers tend to be overly aggressive on their own, producing
+many correct extractions but also many false hits.
+
+% , such as syntactic and semantic features.                                                                            
+
+
+%  by modeling textual cohesion for event extraction.                                                                  
+The bottom component on the left side of Figure\ref{Big-Pic} is a
+structured sentence classifier that identifies event-related story
+contexts.  This classifier determines whether a sentence is discussing
+a domain-relevant event based on two types of information. The
+structured learning algorithm explicitly considers whether the previous
+sentence is an event context when classifying the next sentence, which captures discourse continuity
+across sentences.  I also provide the learner with features
+representing other textual cohesion properties, including lexical
+associations and discourse relations between adjacent sentences. In
+addition, the bottom-up design of the architecture provides
+information about candidate role fillers found by the local detectors.
+This domain-specific information is incorporated into features
+that represent the number, types, and distribution of the candidate
+role fillers both within and across sentences.
+% to incorporate domain-specific event distributions of candidate role fillers                                         
+
+The two components provide different sources of evidence that are both
+considered when making final extraction decisions. 
+%ruihong
+The right side of Figure\ref{Big-Pic} illustrates how the two
+components are used. The event
+%ruihong
+extraction system only produces a role filler if the noun phrase was
+hypothesized to be a candidate role filler based on local context {\it and} it
+appears in an event-related story context, as determined by the
+sequential sentence classifier. In the following sections, I describe
+each of these components in more detail.
+
+\subsection{Candidate Role Filler Detectors}
+  \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 4in]{figures/LINKER/svm.eps}
+ \caption{Candidate Role Filler Extraction Process.}
+\label{svm}
+\end{figure} 
+The mission of the candidate role filler detectors is to analyze each 
+noun phrase and identify candidate role fillers using 
+their local contextual clues. 
+As shown in Figure \ref{svm}, the candidate role filler detectors will 
+analyze each noun phrase (represented as a *) in a document 
+independently and classifier it 
+with respect to an event role. 
+%One noun p
+Our candidate role filler detectors are identical to the local role
+filler extractors used by TIER \cite{HuangR11}, which allows for
+direct comparisons between TIER and our new model.  They are also very
+similar to the plausible role filler detectors used by GLACIER
+\cite{patwardhan-emnlp09} (the other system we compare against
+in Section \ref{eval-section}), except for small differences in the
+lexical features and the positive/negative training ratios.
+
+\subsection{Structured Sentence Classification to Identify Event Contexts}
+The sequential sentence classifier is responsible for determining
+which sentences are related to domain-relevant events.  I utilize
+conditional random fields (CRFs) \cite{CRFs01} to carry out this
+sequential labeling task.  A sequential CRF is a
+structured discriminative learning model that produces a sequence of
+labels using features derived from the input sequence.   This component
+will sequentially read the sentences in a story and determine whether
+each sentence is discussing a relevant event based on direct evidence from both the current 
+sentence and the previous sentence.
+% Thus, we are not creating an overall 
+% avoid dealing with the
+% arbitrarily complex interactions among sentences in a discourse and
+% focus our energy on modeling the effects of the previous sentence to
+% the current sentence.  
+All other sentences only affect the results indirectly through label transitions. 
+
+  \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 4in]{figures/LINKER/crf.eps}
+ \caption{Structured Sentence Classifier: Finding Event-related Contexts.}
+\label{crf}
+\end{figure} 
+
+ As shown in Figure \ref{crf},
+given a whole document as input, the structured sentence classifier 
+classifies each sentence with respect to a particular type of event while 
+consulting the evidence coming from surrounding sentences. 
+As a result, the structured classifier will produce 
+a sequence of labels in a single pass, one per sentence, 
+to indicate if the sentence describes an event or not\footnote{
+Each label in the output sequence is binary. ``1'' indicates that 
+its corresponding sentence describes an event while ``0'' indicates that 
+the sentence does not describe any relevant event.}. 
+
+%We pair the lexical or role filler information from the previous
+%sentence with the event information from the current sentence and
+%encode the pairwise event inference clues as features.  These
+%features are used to model how likely the current sentence is an
+%event sentence.  We will describe the features in detail in the
+%following three subsections.
+
+I used the CRF++ \footnote{http://crfpp.sourceforge.net/\#tips [crfpp.sourceforge.net]} toolkit
+to create our structured sentence classifier. CRF++ performs
+% token-level
+sequential labeling tasks and requires each unit in the
+input to have a fixed number of raw features. Since the length of
+sentences can vary, affecting the number of n-grams and other features accordingly, I
+expand the feature vector for each sentence with pseudo-tokens\footnote{I define a
+  special token for this purpose.} as needed to ensure that every
+sentence has the same number of features. The toolkit was modified not to
+generate real features from the pseudo-tokens.
+% The toolkit was modified not to generate real features from the pseudoword that 
+% we used in our experiments to stuff the features for each sentence
+% to the longest one.
+
+% EMR: Huh??? What kind of modifications?
+
+% structured algorithm, we explore textual cohesion properties by
+% explicitly modeling role filler dependencies, lexical associations and
+% discourse relations as features.
+
+\section{Linguistic Features for the Structured Sentence Classifier}
+\label{features}
+I provide the classifier with rich types of linguistically motivated features to represent
+individual sentences and textual cohesion properties linking adjacent sentences:
+basic features, lexical bridges, discourse bridges and role filler
+distributions. The following subsections describes each  of these feature sets in detail.
+
+\subsection{Basic Features}
+
+As the basic representation of a sentence, I use unigram and bigram
+features.  I create features for every unigram and bigram, without
+stemming or stopword lists.  In addition, I found it beneficial to
+create five additional features representing the first five bigrams in
+the sentence. I define features for positions 1 through 5 of a
+sentence to represent the bigrams that begin in each of these
+positions. I hypothesize that these positional bigram features help
+to recognize expressions representing discourse cue phrases at the
+beginning of a sentence, as well as the main subject of a sentence.
+
+%the addition of the PDTB-styled discourse relations improves or maintains the precisions on all event roles
+%except the event role {\it Weapon}. Its effects on recalls are mixed depending on event roles.
+%Finally, we add the syntactic shared focus relations while keeping all the previously used features,
+%clear increases in both precision and recall are observed on the event role {\it Weapon} while the F scores are
+%stable on all the other event roles.
+
+
+% The basic feature set includes the n-grams, uni-grams and bi-grams,
+% without distinguishing their positions in the sentence and the
+% positional first five bi-grams. They are all derived from the original
+% words in sentences. No stemming is applied. All words in sentences,
+% including the commonly seen stopwords and low-frequency ones, are used
+% to derive the n-gram features. The uni-grams and bi-grams are employed
+% to represent the basic content of single sentences while the novel
+% positional beginning bi-grams are designed to indicate the transition
+% clues across sentences in a simple way.  Each position from one to
+% five is represented by one feature type, so the same bi-gram appearing
+% in different positions will be treated as different features during
+% learning.
+
+\subsection{Lexical Bridge Features}
+\label{lexical-bridges}
+%verbs stemmed, between two adjacent rel sents
+
+An important aspect of textual cohesion is lexical word
+associations across sentences.  This idea has been explored in
+\cite{Soricut06} to model the intuition that the use of certain
+words in a discourse unit (e.g., sentence) tends to trigger the use of
+other words in subsequent discourse units.  In the context of event
+extraction,
+%two adjacent sentences of one continued topic might feature
+%particular lexical word bigrams.
+a pair of related event keywords may occur in consecutive sentences.
+For example, it is common to see ``bombed'' in one sentence and
+``killed'' in the next sentence because bombing event descriptions are often followed
+by casualty reports.
+Similarly, we may see ``attacked'' and ``arrested'' in adjacent
+sentences because a mention of an attack is often followed by news of
+the arrest of suspected perpetrators.
+
+To capture lexical associations between sentences, I create {\it lexical bridge} features that
+pair each verb in the current sentence ($Verb_{i}$) with each verb in the preceding sentence
+ sentence ($Verb_{i-1})$:
+\vspace*{.08in}
+\begin{quote}
+{\it $<Verb_{i-1}, Verb_{i}>$}
+\end{quote}
+\vspace*{.08in}
+To obtain better generalization, I stem the verbs before creating
+the bridge features using the Porter stemmer \cite{Porter80}.  
+For example, a sentence that mentions a bombing followed by a sentence
+containing ``killed'' would generate the following lexical bridge
+feature:  
+\begin{quote}
+{\it $<bomb, kill>$}
+% {\it $<attack, arrest>$}
+\end{quote}
+
+Event keywords could also appear as nouns, such as ``assassination'' and ``death''.  Therefore, I also 
+create lexical bridge features by pairing  nouns from the
+current sentence and the preceding sentence:
+\vspace*{.08in}
+\begin{quote}
+{\it $<Noun_{i-1}, Noun_{i}>$}
+\end{quote}
+\vspace*{.08in}
+For example, if we see the word ``explosion'' in the preceding sentence and the nouns ``people'' and ``offices'' in the current sentence, then two features will be created as follows:
+\begin{quote}
+{\it $<explosion, people>$}
+
+{\it $<explosion, offices>$}
+\end{quote}
+ 
+%emnlp
+I also tried including associations between nouns and verbs in
+adjacent sentences (i.e. {\it $<Verb_{i-1}, Noun_{i}>$} and {\it $<Noun_{i-1}, Verb_{i}>$}),
+ but they did not improve performance.
+%emnlp
+To focus on event recognition, the lexical bridges are only created
+between sentences that each contain at least one candidate role
+filler.  
+
+% Here again, we used the candidate role filler information
+% output by the local role filler extractors in our bottom-up approach.
+% Because the relevant event information is sparse and embedded in the
+% texts and relevant sentences are surrounded by irrelevant sentences of
+% a variety of topics.  For example, a ``murder'' terrorism event of a
+% political leader might be described in a document devoted to the
+% parliamentary selection.  
+
+\subsection{Discourse Bridge Features}
+\label{disc-bridges}
+%used PDTB discourse parser and stanford syntactic parser
+
+I also represent two types of discourse relations between consecutive
+sentences: discourse relations produced by a Penn Discourse Treebank
+(PDTB) trained discourse parser, and syntactic discourse focus
+relations.  I hypothesized that these features could provide
+additional evidence for event label transitions between sentences by
+recognizing explicit discourse connectives or a shared discourse focus.
+
+PDTB-style discourse relations \cite{PDTB08} are organized
+hierarchically in three levels based on different granularities.  I
+use the discourse relation output produced by a PDTB-style
+discourse parser \cite{PDTBparser10}.  
+% EMR: removed to save space.
+% These discourse relations have been shown to help
+% with automatically evaluating general text cohesion \cite{LinZ11}. 
+Given a text, the discourse parser
+generates both explicit  (triggered by cue phrases such as ``if'' or
+``because'') and implicit level-2 PDTB discourse relations, such as
+cause, condition, instantiation, and
+% restatement, 
+contrast.
+% and concession. 
+% synchronous and asynchronous. 
+A discourse relation may exist within a sentence or between two
+adjacent sentences in the same paragraph.  I create features
+representing the intra-sentential discourse relations found in the
+current sentence, as well as the inter-sentential discourse relations
+connecting the current sentence with the previous one.
+%As to the inter-sentential relations, we encode the relation types $DiscRelType$ as the features 
+% Note that we only feed the inter-sentential discourse relation features to the current sentence's feature set 
+% because feeding them to both the current sentence and the preceeding sentence will be redundant.
+%We did try to apply inter-sential discourse relation features to both sentences connected by the discourse relations, 
+%the features feeded to the preceeding sentence hurt the performance.
+Each  discourse relation produced by the parser yields a  feature for its discourse relation type:
+\vspace*{.08in}
+\begin{quote}
+{\it $<DiscRelType>$}
+\end{quote}
+\vspace*{.08in}
+% Although lower precision of implicit discourse relations compared with
+% explicit ones is reported in \cite{PDTBparser10}, we employed both
+% types of discourse relations in our experiments and found the implicit
+% ones also help with improving the performance of our structured
+% sentence classifier.
+% %The parser tags discourse relations both within one sentence and between two adjacent sentences in one paragraph. 
+% %We find both types of discourse relations useful for our sentence classifier.
+% In the implementation, without disinguishing explicit relations from implicit ones, we encode both the intra-sentence discourse relation types 
+% and the inter-sentence relation types between the current sentence and the previous one as features.
+% %Discourse Relation Bridges
+% %Syntactic Focus Relation Bridges
+
+I also create features designed to (approximately) recognize shared discourse focus. 
+% syntactic shared focus relations, is connected with the entity-based
+% cohesion model \cite{Barzilay05}.  
+I consider the noun phrases in three syntactic positions: subject,
+direct object, and the objects of ``by'' prepositional phrases
+(PP-by).  Sentences in active voice constructions are typically
+focused on the entities in the subject and direct object positions as the central entities
+of the discourse. Sentences in passive voice constructions are
+usually focused on the entities in the subject and PP-by positions as the most central
+entities.  I use the Stanford parser \cite{Marneffe06} to identify
+these syntactic constituents.
+
+The motivation for this type of feature is that sentences which have a
+shared discourse focus probably should be assigned the same event
+label (i.e., if one of the sentences is discussing a domain-relevant event, then the other
+probably is too).  To capture the intuition behind this idea, consider
+the following two sentences: \\
+
+{\it (1) A customer in the store was shot by masked men.}\\
+\indent {\it (2) The two men used 9mm semi-automatic pistols.}\\
+ 
+\noindent
+Because the same entity (the men) appears in both the ``by'' PP
+of sentence (1) and the subject position of sentence (2), the 
+classifier should recognize that the second sentence is connected to
+the first. Recognizing this connection may enable the extraction
+system to correctly identify the pistols as  instruments used in the 
+shooting event, even though sentence (2) does not explicitly mention the shooting.
+
+I create a discourse focus feature for each shared noun phrase that occurs in two adjacent sentences in
+one of the designated syntactic positions. 
+% Rather than require an exact match between noun phrase, 
+I consider any two noun phrases that have the same head word to match.  I
+encode each feature as a triple consisting of the head word of the
+shared noun phrase ($NPHead$), the NP's position in the current sentence ($SynPos_{i}$), and the
+NP's position in the preceding sentence ($SynPos_{i-1}$):
+\vspace*{.08in}
+\begin{quote}
+ {\it $<NPHead, SynPos_{i}, SynPos_{i-1}>$}
+\end{quote}
+\vspace*{.08in}
+For example, sentences (1) and (2) would produce the following discourse focus feature:
+\begin{quote}
+{\it $<men, subject, PP\mbox{-}by>$}
+\end{quote}
+
+%bottom-up local event evidences
+%lexical bridges: content
+%discourse bridges: rhetorical, syntactic  
+
+\subsection{Role Filler Distribution Features}
+\label{cand-role-fillers}
+%local NP extractor training To some degree, the global sequential
+%event sentence tagging is based upon the decisions from the local
+%role filler extractors.
+
+%To get the first pass of role filler information, we construct the
+%local plausible role filler extractors following the approach
+%described in \cite{HuangR11} .
+
+The motivation for the bottom-up design of our event extraction
+architecture is that the sentence classifier can benefit from
+knowledge of probable role fillers hypothesized by the local
+detectors. Intuitively, the presence of multiple role fillers within a
+sentence or in the preceding sentence is a strong indication that a
+domain-relevant event is being discussed. The local detectors are not
+perfect, but they provide valuable clues about the number, types, and density of
+probable role fillers in a region of text.
+
+First, I create features that capture information about the
+candidate role fillers within a single sentence.
+% EMR: removed to save space.
+% , to determine
+% whether a sentence is discussing a domain-relevant event.  
+I create features for the
+event role type and the head noun of each candidate role filler in the 
+sentence.  
+% EMR: I don't understand the sentences below!! variant?? plain??
+% please re-write these sentences.
+% We also encode two types of features derived from the collection of
+% candidate role fillers.  The first type of features is for event role
+% types assigned to more than one role filler.  If we see two victims
+% instead of one in a sentence, then we will be more certain that this
+% sentence is event-relevant.  The second type of features is to
+% represent the combinations of two different role types detected in the
+% sentence.  If we see both a perpetrator and a victim instead of only
+% one of them, we might gain more confidence that this sentence is in a
+% event story.
+% EMR: Ruihong -- is the paragraph below correct?  (it should replace
+% the paragraph above )
+I also encode two types of features that capture properties of  the set of
+candidate role fillers.  For each event role, I define a binary feature
+that indicates whether there are multiple candidate role
+fillers for that role. For example, if we see multiple victims
+in a sentence, this is more evidence than seeing a single victim. The second type of feature
+represents combinations of different event role types detected in the
+same sentence. 
+I define 
+%10 
+binary features that represent the presence
+of pairs of distinct event roles occurring in the same
+sentence.\footnote{
+%Since 
+If there are 5 event roles, there are 10 pairs
+  of distinct roles because the order of them doesn't matter.}
+For example, if we see both a candidate perpetrator and a candidate victim in
+a sentence, we may be more confident that the sentence is describing
+a crime.
+
+%  Our bottom-up event extraction approach allows the
+% sentence classifier to consider the distributions of plausible role
+% fillers in and across sentences.
+%We built up the first component, local role filler extractors, following the approach given in \cite{HuangR11}.
+% We thank the authors of TIER \cite{HuangR11} to provide us the output
+% of their local event role filler extractors.  As reported in the
+% paper, the local role filler extractors are able to label a big
+% portion of role fillers, but the precision is not satisfying. The
+% expectation is that the precisions of the role filler extraction will
+% be improved dramatically after we link the local decisions with each
+% other.
+
+I also create several types of features that represent role filler distributions across sentences.
+Intuitively, the presence of a particular type of role filler in one
+sentence may predict the presence of a role filler in the next
+sentence.
+%They represent domain-specific textual connections between sentences.
+For example, a gun is more likely to be an instrument used
+in a crime if the preceding sentences mention perpetrators and victims 
+than if they only mention other weapons. 
+To capture domain-specific distributional properties of the candidate role fillers,
+% found by the first component, 
+%we leverage the role filler information in the previous sentence when we decide on the event label of the current sentence by creating links
+I create features for the role fillers found in adjacent sentences.
+%The local decisions are imperfect, so we associate the role fillers from the previous sentence with their corresponding head words.
+I use both the head word of the noun phrase as well as the type of the event role. 
+If the local detectors produce a candidate role filler of type
+$RFType_{i-1}$ with head  $RFHead_{i-1}$ in the previous sentence, and
+a role filler of type $RFType_{i}$ with head $RFHead_{i}$ in the
+current  sentence, then two features are generated:
+\vspace*{.08in}
+\begin{quote}
+{\it $<RFHead_{i-1}, RFType_{i}>$} 
+\end{quote}
+%\vspace*{.08in}
+\begin{quote}
+{\it $<RFHead_{i-1}, RFType_{i-1}, RFType_{i}>$}
+\end{quote}
+\vspace*{.08in}
+% EMR: The example below is very confusing because there was no example above that it was referring to (just a few parenthesized expressions, which I have now removed). How about you produce these features for the example sentences (1) and (2)?
+%The following features will be created for the example sentences , 
+For example, assuming that three candidate role fillers have been detected
+for the example sentences in Section
+\ref{disc-bridges} ({\it Victim(customer)} and {\it Perpetrator(men)}
+from sentence (1) and {\it Weapon(pistols)} from sentence (2)), the
+following features will be created: 
+\begin{quote}
+{\it $<customer, Weapon>$} 
+
+{\it $<customer, Victim, Weapon>$}
+
+{\it $<men, Weapon>$} 
+
+{\it $<men, Perpetrator, Weapon>$}
+\end{quote}
+
+I also create features to represent role fillers that occur in
+adjacent sentences and share a discourse relation.  If two adjacent
+sentences share a discourse relation ($DiscRelType$), then I
+represent the types of role fillers found in those sentences, coupled
+with the discourse relation.  For example, if two sentences are in a
+causal relation and the candidate role filler detectors found a
+candidate victim in the previous sentence and a candidate perpetrator
+in the current sentence, then the causal relation provides further
+evidence that the victim and perpetrator  are likely correct.
+These types of features are represented as:
+%\vspace*{.08in}
+\begin{quote}
+{\it $<RFType_{i-1}, DiscRelType, RFType_{i}>$}
+\end{quote}
+\vspace*{.08in}
+For the  example above, the feature would be:
+\begin{quote}
+{\it $<Victim, cause, Perpetrator>$}
+\end{quote}
+% We obtained the discourse relations using one PDTB-styled discourse parser \cite{PDTBparser10} which will be discussed in \ref{disc-bridges}. 
+
+% Finally, we also create features to link candidate role fillers with verbs. 
+% Sometimes, the event words could be distant from the plausible noun
+% phrases and the candidate role filler detectors probably miss those cases.
+% However, seeing the event keywords only in the preceeding sentence, verbs in many cases,
+Finally, verbs often provide valuable clues that a sentence is
+discussing an event, so the presence of a specific verb in the previous sentence may bolster a
+role filler hypothesis in the current sentence.   
+%  especially when some candidate role fillers are already detected from
+% the current sentence. 
+I create an additional feature that links each verb in
+the previous sentence to each candidate role filler in the current sentence: 
+\vspace*{.08in}
+\begin{quote}
+{\it $<Verb_{i-1}, RFType_{i}>$}
+\end{quote}
+\vspace*{.08in}
+For example, a
+sentence containing a candidate victim preceded by a sentence containing the word ``bombed'' would produce the following
+feature: 
+\begin{quote}
+{\it $<bombed, Victim>$}
+\end{quote}
+
+% %emnlp
+% \subsubsection{Candidate Role Fillers On the Training Data}
+% \label{cand-role-fillers-train}
+% 
+% To create role filler distribution features in the training phase, the
+% candidate role fillers on the training data are required.  The gold
+% role fillers annotated on the training data are not suitable to be
+% used as candidate role fillers because the gold role fillers are not
+% available in the testing data and the model trained with the gold role
+% fillers on the training data will not be effective in testing.  Using
+% the role filler identified by the normal candidate role filler
+% detectors trained with all the training data is problematic too
+% because overfitting occurs when one model is applied to the same data
+% which is used to train the model.
+% 
+% Instead, we used cross-validation to get the candidate role fillers on
+% the training data.
+% % % % % % % % % %Specifically, 5-fold cross-validation is adopted to get the candidate role fillers on the training data.
+% Specifically, we divided the training documents into 5 sets equally. 
+% To get the candidate role fillers on one set, we 
+% train the candidate role filler detectors using the union of the other
+% four sets and apply them to the chosen set of training documents.   
+% %emnlp
+
+%emnlp
+% \subsubsection{Candidate Role Fillers On the Training Data}
+% \label{cand-role-fillers-train}
+
+% To get values for the role filler distribution features during
+% training,
+% % candidate role fillers on the training data are required.  
+% the gold standard role fillers annotated in the training data are not suitable 
+% because gold role fillers are not
+% available in the testing data. A model trained with gold role
+% fillers will not be effective when tested on new documents with
+% system-generated candidate role fillers. 
+
+%\vspace{.1in}
+%{\bf System Generated Role Fillers v.s Gold Standard Role Fillers}
+\subsection{System Generated Role Fillers vs. Gold Standard Role Fillers}
+%\vspace{.1in}
+
+When generating these features during training,
+% candidate role fillers on the training data are required.  
+the gold standard role fillers are not suitable 
+because gold role fillers will not be available in new texts. A model
+trained with gold role 
+fillers would probably not be effective when applied to new documents
+that have less reliable system-generated candidate role fillers. 
+% Using % the role filler identified by the normal candidate role filler
+% detectors trained with all the training data is problematic too
+% because overfitting occurs when one model is applied to the same data
+% which is used to train the model.
+To obtain realistic values for the candidate role filler
+distributions, I used 5-fold cross-validation on the training data.
+%Specifically, 5-fold cross-validation is adopted to get the candidate role fillers on the training data.
+% Specifically, we divided the training documents into 5 sets equally. 
+To get the candidate role fillers for one fold, I trained the
+role filler detectors using the other four folds and then
+applied the detectors to the selected fold.
+
+\section{Evaluation}
+\label{eval-section}
+Similar to {\it TIER}, I will evaluate the implemented system 
+on two event domains to show the generality of my unified 
+discourse-guided event extraction architecture. 
+The datasets are the same as the ones used to evaluate {\it TIER}:  
+the MUC-4 terrorism corpus and the Civil Unrest data set. 
+%The first dataset is 
+The MUC-4 terrorism corpus
+\cite{muc4-proceedings} is 
+a standard benchmark collection 
+for evaluating event extraction systems. 
+The Civil Unrest data set is newly annotated for evaluating my 
+discourse-guided event extraction models. 
+Please refer to Section \ref{TIER:creating-annotations} for 
+details about the two datasets.
+The evaluation methods (Section \ref{tier:eval-methods}) 
+and metrics (Section \ref{tier:metrics}) are the same as used for 
+evaluating {\it TIER} too. 
+
+
+
+ \section{Evaluating LINKER on the MUC-4 Data Set}
+ \label{chap4:linker-muc}
+In this section, I will show experimental results 
+on the MUC-4 data set.
+The MUC-4 corpus consists of 1700 documents in total, 
+to be consistent with
+previously reported results, 
+%on this data set, 
+%out of the total 1700 documents, 
+I use the $1300$ DEV
+documents for training, $200$ documents (TST1+TST2) as a tuning set
+and $200$ documents (TST3+TST4) as the test set.
+
+\subsection{Experimental Results}
+
+\begin{table}[t]
+\footnotesize
+\centering
+\begin{tabular}[center]{|l|ccccc|c|} \hline
+{\bf System} & {\bf PerpInd} & {\bf PerpOrg} & {\bf Target} & {\bf Victim} &
+{\bf Weapon}  & {\bf Average} \\ \hline
+\multicolumn{7}{|c|}{Local Extraction Only} \\ \hline
+{\bf Candidate RF Detectors} & 25/67/36 & 26/78/39 & 34/83/49 & 32/72/45 & 30/75/43  & 30/75/42 \\ \hline
+\multicolumn{7}{|c|}{LINKER (with Structured Sentence Classifier)} \\ \hline
+% {\bf unigram+bigrams} & 54/53/54 & 45/44/44 & 56/69/62 & 59/55/57 & 59/52/55  & 55/55/55 \\ 
+{\bf Basic feature set} & 56/54/55 & 47/46/46 & 55/69/{\bf 61} & 61/57/59 & 58/53/56  & 55/56/56 \\ \hline
+% \multicolumn{7}{|c|}{local event evidence structures} \\ \hline
+% {\bf label,head, multi, comb} & 56/56/56 & 49/46/47 & 55/68/60 & 58/57/58 & 53/57/55 & 54/57/55\\ \hline
+% {\bf head/labelHead-label} & 52/56/54 & 47/47/47 & 54/68/60 & 59/56/57 & 61/52/56 & 55/56/55 \\ 
+% {\bf verb-label} & 52/55/53 & 48/47/47 & 57/69/62 & 61/59/60 & 60/55/58 & 56/57/56 \\
+% {\bf label-disc-label} & 54/53/54 & 48/45/46 & 55/69/61 & 58/57/58 & 61/57/59  & 55/56/56 \\ \hline
+{\bf + Candidate RF features} & 51/57/54 & 47/47/47 & 54/69/60 & 60/58/59 & 56/60/58 & 54/59/56 \\ \hline
+% \multicolumn{7}{|c|}{lexical bridges} \\ \hline
+%{\bf v-v} & 52/57/54 & 51/49/50 & 54/68/60 & 60/59/59 & 60/59/59 & 55/59/57 \\
+%{\bf n-n} & 51/57/54 & 51/50/50 & 54/69/61 & 60/58/59 & 60/59/59 & 55/59/57 \\
+%{\bf v-n} & 51/56/54 & 51/49/50 & 54/69/60 & 60/59/59 & 59/59/59 & 55/58/57 \\
+%{\bf n-v} & 52/56/54 & 49/49/49 & 54/68/60 & 59/56/58 & 61/60/61 & 55/58/56 \\ \hline
+%{\bf all} & 51/56/53 & 51/50/51 & 55/70/62 & 61/58/59 & 60/59/59 & 56/58/57 \\ \hline
+{\bf + Lexical Bridge features} & 51/57/53 & 51/50/50 & 55/69/{\bf 61} & 60/58/59 & 62/62/62 & 56/59/57 \\ \hline
+% \multicolumn{7}{|c|}{discourse bridges} \\ \hline
+%{\bf intra} & 51/55/53 & 54/50/52 & 54/68/60 & 60/58/59 & 62/62/62 & 56/59/57 \\
+%{\bf inter} & 52/57/55 & 52/49/50 & 54/67/60 & 62/58/60 & 63/60/61 & 57/58/58 \\ \hline
+% {\bf + Discourse Relation features} & 54/58/56 & 55/49/52 & 55/68/61 & 63/59/61 & 60/60/60 & 58/59/58 \\ \hline %
+% \multicolumn{7}{|c|}{discourse bridges} \\ \hline
+{\bf + Discourse features} & 54/57/{\bf 56} & 55/49/{\bf 51} &
+55/68/{\bf 61} & 63/59/{\bf 61} & 62/64/{\bf 63} & 58/60/{\bf 59} \\ \hline
+\multicolumn{7}{|c|}{Previous Systems} \\ \hline
+{\bf TIER (2011)} & 48/57/52 & 46/53/50 & 51/73/60 & 56/60/58 & 53/64/58 & 51/62/56 \\ \hline
+{\bf GLACIER (2009)} & 51/58/54 & 34/45/38 & 43/72/53 & 55/58/56 & 57/53/55 & 48/57/52 \\ \hline
+\end{tabular}
+\caption{Experimental results on the MUC-4 data set, reported as
+  Precision/Recall/F-score.}
+\label{results-table-linker}
+\end{table}
+
+Table \ref{results-table-linker} shows the evaluation results on the five
+event roles for the MUC-4 task, and the macro-average over all five
+roles.  Each cell in the table shows the precision (P), recall (R),
+and F scores, written as P/R/F. The first row of numbers shows the 
+results for the candidate role filler detectors when used by themselves. 
+These local role filler extractors produce relatively high recall, 
+but consistently low precision.
+
+The next set of rows in Table \ref{results-table-linker} shows the effect of adding the
+structured sentence classifier to create the complete bottom-up event extraction model.  
+% To see how the three properties of
+% textual cohesion explored in the structured sentence classifier
+% training, candidate role filler distributions, lexical bridges and
+% discourse bridges, affect the performance of our bottom-up event
+% extraction system, we first show the results using the structured
+% sentence classifier trained with the basic lexical features from
+% sentences
+% define them as {\bf $BaseL_{1}$} and {\bf $BaseL_{2}$},
+I incrementally add each set 
+of textual cohesion features to assess the impact of each
+one separately.  The Basic feature set row   
+% of Table \ref{results-table} 
+uses only
+the N-gram features.  Even with just these simple features,
+incorporating the structured sentence classifier into the model
+yields a large improvement in precision (+25) but at the expense of substantial recall (-19).  
+
+% Compared with the performance of
+% TIER and GLACIER, the precisions are already higher than both of the
+% previous event extraction systems and the recalls are catching up with
+% GLACIER although it is 6 points lower than TIER.
+%The two baselines all use uni-grams and bi-grams with no order as features,
+%but their difference is that {\bf $BaseL_{2}$} also employs the first five bi-grams with order as features.
+%From the table, we can see that {\bf $BaseL_{2}$} obtained a little better recalls compared to the first baseline
+%and the precisions are also better on three event roles.
+%We think the reason is that the beginning bi-grams can indicate transition relations across sentences sometimes and
+%this provides useful clues
+%for the sentence classifier to model the sentence label transitions.
+
+
+% %The following three rows in the second sector of Table \ref{results-table} show the results after
+%adding each set of textual cohesion features to the
+%structured sentence classifier, cumulatively. 
+The {\bf + Candidate RF features} row shows the impact of providing the
+candidate role filler information to the sentence classifier (see
+Section \ref{cand-role-fillers}).  Compared with the previous row,
+the role filler features produce an average recall gain of +3, with
+only a one point loss of precision.  When looking at the event roles
+individually, we see that recall improves for all of the event roles
+except Targets.
+%The 4-7 rows of Table \ref{results-table} shows the effects of the structured sentence classifier to the event
+%extraction system when
+%it is trained with candidate role filler distributional information (see \ref{cand-role-fillers}) together with all
+%the basic features used in {\bf $BaseL_{2}$}.
+%The fourth row shows the results after adding in the candidate role filler information within sentences,
+%while the 5-7 rows show the performance after adding in the candidate role filler information across sentences.
+%Roughly, the effects of different types of candidate role filler distributional information are mixed in both
+%precision and recalls depending on the event role types.
+%The eighth row shows the result when all kinds of candidate role filler information are added to train the
+%structured sentence classifier.
+%Compared with {\bf $BaseL_{2}$}, we see 3 points of gain in the recall averaged over all event roles with only one
+%point of loss in the precision.
+%Basically, the recalls are improved on all event roles except {\it Target}.
+%If we focus on the recall gains when we look back at the rows 4-7, we see improvements of recalls for the event
+%roles {\it PerpInd} and {\it Weapon} in row 4,
+%recall gains on two perpetrator roles in row 5, recall gains on all event roles except {\it Target} in row 6 and
+%recall gain on {\it Weapon} in row 7.
+
+The {\bf + Lexical Bridge features} row shows 
+%the result when the sentence classifier is
+%trained using lexical bridge features (Section
+%\ref{lexical-bridges}) in addition to all the basic lexical features
+%and the candidate role filler distributional features. 
+the impact of the lexical bridge features (Section
+\ref{lexical-bridges}).  These features
+produced a two point gain in precision, yielding a one
+point gain in F-score. Two of the event roles (PerpOrg and  Weapon) showed 
+improvement in both precision and recall. 
+%Besides, we also see a slight
+%increase of precision for the event role {\it Target}.
+
+The {\bf + Discourse features} row shows the performance 
+after adding the discourse bridge features (Section \ref{disc-bridges}).  
+% Compared with the previous row, 
+The discourse features improve precision for three of the five
+event roles (PerpInd, PerpOrg, and Victim). 
+% The recall is relatively stable over four event roles, but 
+Weapons also gain two points of recall. Overall, the discourse
+features yield a two point increase in the F score.
+%the addition of the PDTB-styled discourse relations improves or
+%maintains the precisions on all event roles except the event role
+%{\it Weapon}. Its effects on recalls are mixed depending on event
+%roles.  Finally, we add the syntactic shared focus relations while
+%keeping all the previously used features, clear increases in both
+%precision and recall are observed on the event role {\it Weapon}
+%while the F scores are stable on all the other event roles.
+
+Together, all of the textual cohesion features yield a 3 point gain in
+precision and a 4 point gain in recall relative to the basic feature
+set (N-grams), achieving an F-score improvement of 3 points.
+
+
+\subsection{Comparison with Other Systems}
+
+I compare the performance of the event extraction model {\it LINKER} with 
+%two 
+the performance of my first discourse-guided event extraction 
+model {\it TIER} (Chapter \ref{Chapter:TIER}). 
+%relatively recent event extraction systems that have been evaluated on
+%the same MUC-4 data set: TIER \cite{HuangR11} and GLACIER
+%\cite{patwardhan-emnlp09}. 
+Briefly speaking, 
+TIER is designed to identify secondary role
+filler contexts in the absence of event keywords by using a document genre classifier,  a set of
+{\it role-specific sentence classifiers}, one per event role, in
+addition to an {\it event sentence classifier} (similar to classifiers
+used in other work \cite{patwardhan-emnlp09,gu06}).  
+In TIER's multi-layered event extraction architecture, 
+documents pass through a pipeline where they are
+analyzed at different levels of granularity: document level, sentence
+level and phrase level. 
+% Each sentential classifier is trained independently from the others.
+%At
+%the same time, they argue that extracting information from the
+%secondary contexts can be risky, unless the larger context is
+%discussing a relevant event.  Therefore, they also developed an event
+%narrative document classifier to identify a particular genre of
+%documents, event narratives, and define them as articles whose main
+%purpose is to report the details of an event.  Consequently, they
+%apply the {\it role-specific sentence classifiers} only to event
+%narratives to aggressively search for role fillers in those stories.
+% At the lowest level, the role filler extractors are responsible for labeling
+% individual noun phrases in event sentences and role-specific
+% sentences.  A document genre classifier 
+% in a particular genre of documents as role fillers or not.
+%TIER has produced the best results reported to date on the MUC-4 event extraction data set 
+%\cite{HuangR11} for learning-based role filler extraction systems. 
+% In our event extraction system, we
+% explore the larger contexts by constructing one single sequentially
+% structured sentence classifier where different aspects of textual
+% cohesion are modeled. 
+% Furhtermore, our bottom-up approach allows the
+% sentence classifier to consider the domain-specific distributions of plausible role
+% fillers in and across sentences.  
+In addition, I compare {\it LINKER}'s performance with another 
+relatively recent event extraction system GLACIER \cite{patwardhan-emnlp09}. 
+which has also been evaluated on 
+the same MUC-4 data set.  
+%As a second baseline, we also compare our results with GLACIER \cite{patwardhan-emnlp09}. 
+GLACIER uses a unified probabilistic model for event extraction that jointly
+considers sentential evidence and phrasal evidence when extracting
+each role filler.  It consists of an sentential event recognizer and a set of
+plausible role filler recognizers, one for each role. 
+%The two
+%components produce probabilities for one sentence to be event-relevant
+%and one noun phrase to be a role filler and 
+The final extraction
+decisions are based on the product of the normalized sentential and
+the phrasal probabilities.
+
+% \subsection{Comparisons to Baselines}
+
+The last two rows in Table \ref{results-table-linker} show the results for
+TIER and GLACIER, using the same evaluation criteria as {\it LINKER}.
+I compare their results with the performance of {\it LINKER}\'s complete event
+extraction system using all of the feature sets, which is shown in the
+{\bf + Discourse Features} row of Table \ref{results-table-linker}.
+% , is 58/60/59 in P/R/F.  
+Compared with my first discourse-guided event extraction model TIER, 
+{\it LINKER} achieves 7 points higher
+precision, although with slightly lower recall (-2). Overall, {\it LINKER} 
+yields a 3 point higher F score than TIER. If we look at the
+individual event roles, {\it LINKER} produces substantially higher
+precision across all five event roles.  Recall is comparable for
+PerpInd, Victim, and Weapon, but is several points lower on the PerpOrg and
+Target roles. 
+Compared with GLACIER, {\it LINKER} also shows
+significant gains in precision over all five event roles.  Furthermore, the
+average recall is 3 points higher, with Weapons showing the largest
+benefit (+11 recall gain).
+
+%As to the recalls, our system produces comparable
+%or higher recalls on four event roles, two perpetrator event roles,
+%{\it Victim} and {\it Weapon} while 4 points of loss is seen on one
+%single event role {\it Target}.
+
+In summary, the unified discourse-guided event extraction model {\it LINKER} 
+yields substantially
+higher precision than previous event extraction systems on the MUC-4
+data set, with similar levels of recall. 
+Considering the limited number of documents (200 documents) in the test set, 
+in Section \ref{linker:significance}, I will show the statistical significance testing results 
+by comparing {\it LINKER}\'s performance to {\it TIER}\'s 
+performance.
+
+\section{Evaluating LINKER on the Civil Unrest Data Set}
+
+Compared to the MUC-4 corpus, which consists of 1700 documents, the 
+Civil Unrest data set (372 documents) is much smaller.
+Therefore, the same as in 
+{\it TIER} evaluations, 
+on the Civil Unrest data set, 
+I performed 10-fold cross validation to evaluate {\it LINKER} too.
+
+\subsection{Experimental Results}
+
+\begin{table}[t]
+\footnotesize
+\centering
+\begin{tabular}[center]{|l|cccc|c|} \hline
+{\bf System} & {\bf Agent} & {\bf Site} & {\bf Location} & {\bf Instrument}  & {\bf Average} \\ \hline
+\multicolumn{6}{|c|}{Local Extraction Only} \\ \hline
+{\bf Candidate RF Detectors} & 37/51/43 & 23/38/28 & 13/49/21 & 44/70/54 & 29/52/38 \\ \hline
+\multicolumn{6}{|c|}{with Structured Sentence Classifier} \\ \hline
+% {\bf unigram+bigrams} & 54/53/54 & 45/44/44 & 56/69/62 & 59/55/57 & 59/52/55  & 55/55/55 \\ 
+{\bf Basic feature set}  & 66/28/40 & 57/19/29 & 61/22/33 & 70/55/62 & 64/31/42\\ \hline
+% \multicolumn{7}{|c|}{local event evidence structures} \\ \hline
+% {\bf label,head, multi, comb} & 56/56/56 & 49/46/47 & 55/68/60 & 58/57/58 & 53/57/55 & 54/57/55\\ \hline
+% {\bf head/labelHead-label} & 52/56/54 & 47/47/47 & 54/68/60 & 59/56/57 & 61/52/56 & 55/56/55 \\ 
+% {\bf verb-label} & 52/55/53 & 48/47/47 & 57/69/62 & 61/59/60 & 60/55/58 & 56/57/56 \\
+% {\bf label-disc-label} & 54/53/54 & 48/45/46 & 55/69/61 & 58/57/58 & 61/57/59  & 55/56/56 \\ \hline
+{\bf + Candidate RF features} & 57/40/47 & 43/27/33 & 40/33/36 & 64/61/63 & 51/40/45 \\ \hline
+% \multicolumn{7}{|c|}{lexical bridges} \\ \hline
+%{\bf v-v} & 52/57/54 & 51/49/50 & 54/68/60 & 60/59/59 & 60/59/59 & 55/59/57 \\
+%{\bf n-n} & 51/57/54 & 51/50/50 & 54/69/61 & 60/58/59 & 60/59/59 & 55/59/57 \\
+%{\bf v-n} & 51/56/54 & 51/49/50 & 54/69/60 & 60/59/59 & 59/59/59 & 55/58/57 \\
+%{\bf n-v} & 52/56/54 & 49/49/49 & 54/68/60 & 59/56/58 & 61/60/61 & 55/58/56 \\ \hline
+%{\bf all} & 51/56/53 & 51/50/51 & 55/70/62 & 61/58/59 & 60/59/59 & 56/58/57 \\ \hline
+{\bf + Lexical Bridge features}  & 57/39/46 & 45/28/34 & 42/33/37 & 64/57/60 & 52/39/45\\ \hline
+% \multicolumn{7}{|c|}{discourse bridges} \\ \hline
+%{\bf intra} & 51/55/53 & 54/50/52 & 54/68/60 & 60/58/59 & 62/62/62 & 56/59/57 \\
+%{\bf inter} & 52/57/55 & 52/49/50 & 54/67/60 & 62/58/60 & 63/60/61 & 57/58/58 \\ \hline
+% {\bf + Discourse Relation features} & 54/58/56 & 55/49/52 & 55/68/61 & 63/59/61 & 60/60/60 & 58/59/58 \\ \hline %
+% \multicolumn{7}{|c|}{discourse bridges} \\ \hline
+{\bf + Discourse features} & 58/41/48 & 43/27/33 & 41/33/36 & 64/61/63 & 51/40/45\\ \hline
+\multicolumn{6}{|c|}{with Multi-faceted Recognition} \\ \hline
+{\bf + Recognition} & 65/34/45 & 54/23/32 & 55/29/37 & 68/61/65 & 60/37/46\\ \hline
+\multicolumn{6}{|c|}{Previous Systems} \\ \hline
+{\bf TIER (2011)} & 50/39/44 & 41/28/34 & 30/29/29 & 67/64/66 & 47/40/43 \\ \hline
+\end{tabular}
+\caption{Experimental results on civil unrest event data set, reported as
+  Precision/Recall/F-score.}
+\label{results-table-linker-cu}
+\end{table} 
+
+
+To facilitate comparisons, the candidate role filler extractors are exactly the same as 
+used in {\it TIER}. 
+The first row of Table \ref{results-table-linker-cu} shows the results of using the 
+candidate role filler extractors only.
+The second section of the table shows the extraction systems' performance with
+the structured sentence classifier. 
+The {\bf Basic feature set} row shows that using only the basic sentential features, the structured 
+sentence classifier substantially improved the precision. 
+The {\bf + Candidate RF features} row shows that after adding the domain specific role filler distributional features, 
+the structured sentence classifier can identify more relevant contexts and therefore, 
+it achieved better recall compared to the previous row, with sacrifice in precision. 
+The third row {\bf + Lexical Bridge features} shows that in this domain, 
+%with limited number of documents, 
+the cross-sentence lexical features can improve the precision for two event roles, Site 
+and Location, but the recall was reduced on the other two event roles, Agent and Instrument. 
+Overall, the lexical features are not helping on top of the role filler distributional features. 
+Therefore, I removed the lexical featuers and added in the discourse relation features to 
+check if the cross sentence discourse bridge features can further 
+improve the structured sentence classifier's performance on top of the role filler distributional features.
+The fourth row {\bf + Discourse features} shows that the discourse features can mildly further improve 
+the extraction precision for two event roles, Agent and Location, while maintaining the overall recall. 
+
+Compared to {\it TIER}'s results (the last row of the table) on the Civil Unrest data set, 
+{\it LINKER} achieved much better precision while with some loss of recall, and overall 
+achieved a slightly better F-score.
+Similar to the evaluations using the MUC-4 dataset, 
+the test set (all the data set in the cross-validation setting) 
+of the civil unrest domain is also limited in size,  
+therefore, in Section \ref{linker:significance}, I will also show the statistical significance testing results 
+by comparing {\it LINKER}\'s performance to {\it TIER}\'s 
+performance using the civil unrest data set.
+
+
+
+\subsection{Learning Curve}
+\begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 4in]{figures/LINKER/learning_curve_cu_linker_4roles_2.eps}
+ \caption{Learning Curve for LINKER}
+\label{learning_curve_cu_linker}
+\end{figure} 
+
+Similar to what we have observed in {\it TIER}'s evaluations, 
+the performance of {\it LINKER} is also relatively low in the Civil Unrest domain  
+compared with its evaluation results on the MUC-4 terrorism domain.
+This is probably due, at least in part, to the 
+%limited size of the data set. 
+smaller amount of training data. 
+To show how {\it LINKER}'s performance was affected by the size of data, 
+I also drew the learning curve for {\it LINKER}
+by training the system on different subsets of the data set.
+%Specifically, I start with running the system on a quarter of the data. 
+%Then, I incrementally add in more data, one quarter a time and run {\it TIER} 
+%on the gradually enlarged data set. 
+The procedures are the same as used in the learning curve 
+for {\it TIER} (see Section \ref{tier:lcurve}).
+From the learning curve shown in Figure \ref{learning_curve_cu_linker}, 
+we can see that the extraction performance of {\it LINKER} clearly improves 
+when more and more training data was used. 
+Therefore, we can expect to see better extraction performance 
+if we train {\it LINKER} with a larger data set in the future. 
+
+
+\section{Statistical Significance Testing}
+\label{linker:significance}
+
+
+\begin{table}[t]
+\small
+\centering
+\begin{tabular}[center]{|l|cc|} \hline
+{\bf Domains} & {\bf TIER} & {\bf LINKER} \\ \hline
+
+{\bf Terrorism (MUC-4)} & 51/62/56 & 58/60/59 \\ \hline
+
+{\bf Civil Unrest (CU)} & 47/40/43  & 51/40/45 \\ \hline
+\end{tabular}
+\caption{Macro-Avg Evaluation Result Summary (Precision/Recall/F-score, percentages).}
+\label{muc-cu-summary-macro}
+\end{table}
+
+Up to this point, I have presented the evaluation results of both {\it TIER} 
+and {\it LINKER} on two distinct event domains: the MUC-4 terrorism corpus and the newly 
+created Civil Unrest data set. 
+Overall, {\it LINKER} has achieved better results when compared its {\it TIER} 
+counterparts. 
+Table \ref{muc-cu-summary-macro} shows the performance comparisons using the macro-avg. 
+Considering the imbalance of role filler distributions in both domains, 
+I also calculated the micro averages and Table \ref{muc-cu-summary-micro} shows a summary of the comparisons.
+
+%MUC4_micro
+%tier P/R/F: 0.528803545052	0.609880749574	0.566455696203
+%linker P/R/F: 0.578253706755	0.59693877551	0.587447698745
+%cu_micro
+%tier P/R/F: 42/36/39
+%linker P/R/F: 51/36/42
+
+\begin{table}[t]
+\small
+\centering
+\begin{tabular}[center]{|l|cc|} \hline
+{\bf Domains} & {\bf TIER} & {\bf LINKER} \\ \hline
+
+{\bf Terrorism (MUC-4)} & 53/61/57 & 58/60/59 \\ \hline
+
+{\bf Civil Unrest (CU)} & 46/38/41 & 53/39/45 \\ \hline
+\end{tabular}
+\caption{Micro-Avg Evaluation Result Summary (Precision/Recall/F-score, percentages).}
+\label{muc-cu-summary-micro}
+\end{table}
+
+To see if {\it LINKER}  has achieved statistically significant 
+extraction performance improvements compared to {\it TIER}, 
+I ran significance testing using the {\bf F-scores} on both data sets. 
+The testing methodology is paired
+bootstrap \cite{SigTest12}. 
+Table \ref{significance-testing-results} reports the significance testing results. 
+
+\begin{table}[t]
+\small
+\centering
+\begin{tabular}[center]{|l|cc|} \hline
+{\bf Domains} & {\bf Macro\_Avg} & {\bf Micro\_Avg} \\ \hline
+
+{\bf Terrorism (MUC-4)} & 0.05 & 0.05 \\ \hline
+
+{\bf Civil Unrest (CU)} & 0.1 & 0.01 \\ \hline
+\end{tabular}
+\caption{Significance Testing Results ($p<$ )}
+\label{significance-testing-results}
+\end{table}
+
+%\begin{table}[t]
+%\small
+%\centering
+%\begin{tabular}[center]{|l|cccc|} \hline
+%{\bf Roles} & {\bf Agent} & {\bf Site} & {\bf Location} & {\bf Instrument} \\ \hline
+
+%{\bf Results} & 0.01 & - & 0.05 & - \\ \hline
+
+%%{\bf Civil Unrest (CU)} & 0.1 & 0.001 \\ \hline
+%\end{tabular}
+%\caption{Role-wise Significance Testing Results on 
+%Civil Unrest data set (p < ), \"-\" denotes that {\it LINKER} is not 
+%performing significantly better than {\it TIER}.}
+%\label{significance-testing-results-cu-roles}
+%\end{table}
+
+We can see that on the terrorism domain (the MUC-4 corpus), 
+{\it LINKER} performs significantly better than {\it TIER} using 
+both Macro Average and Micro Average F-scores measurements. 
+While {\it LINKER} doesn't show significantly better results
+using Macro Average F-score on the Civil Unrest data set, it performs 
+significantly better than {\it TIER} using Micro Average F-score on this 
+second event domain.
+
+\section{Conclusions}
+
+In this chapter, I desribed my unified discourse-guided 
+event extraction architecture, {\it LINKER}, which includes 
+a structured sentence classifier to 
+sequentially read the sentences in a story and determine whether
+each sentence is discussing a relevant event 
+based on evidence from both the current 
+sentence and the previous sentence. 
+A variety of textual cohesion properties were captured 
+in the structured sentence classifier, 
+including lexical word
+associations, discourse relations across sentences and 
+distributional properties of the candidate role fillers within
+and across sentences. 
+Experimental results on two distinct event domains 
+show that {\it LINKER} significantly outperformed 
+the previous event extraction systems and my first 
+discourse-guided event extraction model {\it TIER}.
+
+
+
+

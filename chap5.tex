@@ -1,0 +1,2630 @@
+\chapter{Multi-faceted Event Recognition}
+\label{Chapter:Multi-faceted}
+%Instead of producing full representations of events, event recognition has its own applications.
+Before giving documents to sophisticated event extraction systems, 
+we want to ask if the documents actually contain any relevant events,  
+mainly for two reasons.
+First, because event extraction generally comprises costly text analysis, 
+processing documents that do not mention a relevant event 
+%for extraction purpose 
+is 
+%meaningless and 
+a waste of computing resources.
+%since event extraction is a costly process.
+Second, by focusing on event relevant documents, event extraction 
+%performance will be improved 
+systems can be more 
+%focused and 
+accurate 
+%precise 
+%if only 
+%we can 
+%detect if a document contains any event description prior to running 
+%event extraction systems on the document 
+because any extraction that is produced 
+from irrelevant documents 
+is a false hit and 
+%will hurt the accuracy of event extraction systems.
+makes event extraction 
+%systems 
+less precise.
+%Therefore, 
+In this chapter, I will present my research on {\it event recognition} 
+which aims to accurately identify documents that describe a
+specific type of event. 
+
+{\it Event recognition} can facilitate a series of light and easily scalable 
+event oriented applications. One example is tracking events.
+Many people are interested in following news reports and updates about events.
+Government agencies are keenly interested in news about civil unrest,
+acts of terrorism, and disease outbreaks. Companies want to stay on
+top of news about corporate acquisitions, high-level management
+changes, and new joint ventures. The general public is interested in
+articles about crime, natural disasters, and plane crashes. 
+With accurate event recognition, we can detect the first occurrences 
+and the following mentions of particular types of events, thus we can 
+track the dynamics of 
+%certain type of 
+events. 
+%I will refer to the task of  as {\it event recognition}.
+%identifying documents that describe a
+%specific type of event
+\section{Challenges to Accurate Event Recognition}
+\label{event-recognition-challenges}
+{Event Recognition} is a challenging task. It is tempting to assume that event keywords are sufficient to
+identify documents that discuss instances of an event. But event
+words are rarely reliable on their own. For example, consider the challenge
+of finding documents about civil unrest. The words {\it ``strike''},
+{\it ``rally''}, and {\it ``riot''} refer to common types of civil unrest, but
+they frequently refer to other things as well.  A  strike can refer
+to a military event or a sporting event (e.g., {\it ``air
+strike''}, {\it ``bowling strike''}), a rally can be a race or a
+spirited exchange (e.g.,{\it ``car rally''}, {\it ``tennis rally''}), and a riot
+can refer to something funny (e.g., {\it ``she's a riot''}).
+% For natural disaster events, words like ``hurricane'' and ``tsunami''
+% seem like relatively unambiguous event keywords. But both terms can
+% also refer to sports teams, Hurricane is a city in Utah, and 
+% Tsunami Research Center, tsunami of strangers, Hurricane Relief Fund
+Event keywords also appear in general discussions that do not
+mention a specific event (e.g., {\it ``37 states
+prohibit teacher strikes''} or {\it ``The fine for inciting a riot is \$1,000''}).  
+%Due to the ambiguity of single event keywords, the accuracy of event recognition is much degraded. 
+%Second, event keywords can be mentioned in general discussions and
+%used metophorically.%true to both keywords and phrases
+Furthermore, many relevant documents are not easy to recognize
+because events can be described with complex expressions that do not include 
+event keywords. %recall misses  
+For example, 
+{\it ``took to the streets''}, {\it ``walked off their jobs''} and {\it ``stormed
+ parliament''} often describe civil unrest. 
+% But the individual words are not indicative of civil unrest. 
+% The entire phrase is necessary to evoke the meaning of civil unrest.
+
+% Ruihong: I don't think these natural disaster expressions are good
+% examples because the subject of those verbs will usually be an event
+% keyword (e.g., the earthquake flattened the city). 
+% In natural disaster
+%  reports, ``flattened city'', ``rocked region'' and ``jolted island''
+%  are commonly used to inform the happening of a devastated typoon or
+%  earthquake.
+%walked off jobs, chanted slogans
+%Compared with individual event keywords, event phrase expressions convey richer event information. 
+% Generally, they describe activities involved in events vividly and they inform other event information such as sites 
+% (``streets'' as in ``took to streets'' and ``island'' as in ``jolted island'') and props used in events (``banners'' as in ``waved banners'') too.
+
+\section{Event Facets: to the Rescue}
+\label{facets}
+While event expressions are not sufficient to unambiguously recognize event descriptions 
+of a particular type, events generally feature certain characteristics that  
+are essential to distinguish one type
+of event from another. I call the defining characteristics of an event 
+({\it ''event facets''}).
+For example, {\it agents} and {\it purpose} are 
+%two characteristics of an event that are essential to distinguish one type
+%of event from another. 
+%two such 
+event facets for some types of events.  
+The agent 
+responsible for an action often determines how we categorize the action. 
+For example, natural disasters, military operations, and terrorist
+attacks can all produce human casualties and physical destruction. 
+% But we categorize reports of injuries and destruction differently
+% depending upon the agent. 
+But the agent of a natural disaster must be a natural
+force, the agent of a military incident must be military
+personnel, and the agent of a terrorist attack is never a natural
+force and rarely military personnel. 
+There may be other important factors as well, but the agent is 
+often an essential part of an event definition. 
+
+
+The purpose of an event is also a crucial factor in
+distinguishing between some event types. 
+For example, civil unrest events and sporting events both involve
+large groups of people amassing at a specific site. 
+But the purpose of
+% the mass gatherings are completely different: 
+civil unrest gatherings
+is to protest against socio-political problems, while
+sporting events are intended as entertainment. 
+% to watch a game.
+As another example, terrorist events and military incidents can both cause
+casualties, but the purpose of terrorism is to cause
+widespread fear, while the purpose of military actions is
+to protect  national security interests. 
+
+%In addition, these two types of events consist of different subevents too, angry people would shout slogans in a civil unrest rally while ball game watchers might just talk to
+%their friends softly and laugh when they enjoyed a fantastic game show. 
+%In some degree, the information falling in the second category make the events newsworthy.
+
+
+%I hypothesize that 
+In addition, there are many types of events that feature event facets 
+other than agents and purpose, including effects, patients and cause. 
+An interesting angle to categorize a variety of events in both 
+nature and our social lives is by using their event defining characteristics. 
+Therefore, seemingly unrelated events can be organized into a general event group 
+because they share the same set of event facets.  
+For example, conceptually, vehicle crashes and corporate acquisitions are two 
+completely different types of events. 
+However, vehicle crashes must involve vehicles that are crashed 
+and corporate acquisitions will always refer to the corporate entities 
+that are acquired. Therefore, structurally, these two types of events 
+feature the same event facet, patients of events, and they 
+naturally fall into a general event group. 
+%By exploring many types of events and the event facets 
+%they are expected to have, 
+%that are 
+%mandatory
+%necessary to define the events, 
+%we can group events into categories based on the event facets they share. 
+%In this exploration, I will 
+%resort to 
+%research related event ontology studies (\cite{grenon04,Worboys04}) that are done in other disciplines, such as philosophy, cognition or knowledge engineering. 
+Research in event ontology across multiple related disciplines, 
+such as philosophy, cognition or knowledge engineering (\cite{grenon04,Worboys04,Kaneiwa07}), 
+have shown similar observations. 
+%some discussions, to complete
+%some domain specific ontologies
+%More importantly, I will focus on how the event facet information is described in real text.  
+%In the following, 
+
+\begin{table}[ht]
+\renewcommand{\arraystretch}{1.8}
+\small
+\centering
+\begin{tabular}[center]{|lcccccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf} & {\bf Agent} & {\bf Patient} & {\bf Purpose} & {\bf Effect} & {\bf Cause} & {\bf Position}\\ \hline
+%{\bf } & {\bf Phrases} & {\bf Terms} & {\bf Phrases}\\ \hline 
+{\bf Civil Unrest} & \checkmark &  & \checkmark & & & \\
+{\bf Referendum} & \checkmark  &  & \checkmark & & & \\ 
+\hline
+{\bf Terrorism} & \checkmark &  &  & \checkmark & & \\
+{\bf Military Operations} & \checkmark &  &  & \checkmark & & \\ 
+\hline
+{\bf Natural Disasters} &  &  &  & \checkmark & \checkmark & \\
+{\bf Disease Outbreaks} &  &  &  & \checkmark & \checkmark & \\ 
+\hline
+{\bf Vehicle Crash} &  & \checkmark &  &  & & \\ 
+{\bf Rocket/Missile Launches} & & \checkmark &  &   & & \\ 
+{\bf Corporate Acquisition} &  & \checkmark &  &  & & \\ 
+{\bf Microelectronic Production} &  & \checkmark &  &  & & \\ 
+%{\bf Stock Index Changes} &  & \checkmark &  &  & & \\ 
+\hline
+{\bf Management Succession} & \checkmark & \checkmark &  & & & \checkmark \\ 
+%{\bf Nomination} & \checkmark & \checkmark &  & & & \checkmark \\
+\hline
+%{\bf Fine} & \checkmark & \checkmark &  & & & \checkmark \\ \hline
+{\bf Negotiation} & \checkmark \checkmark &  &  & & &  \\
+{\bf Sports Games} & \checkmark \checkmark &  &  & & &  \\ 
+{\bf Meeting} & \checkmark \checkmark  &  &  & & &  \\ 
+%\hline
+%{\bf Election} & \checkmark & \checkmark \checkmark &  & & & \checkmark \\
+ \hline
+%{\bf Iter \#5} & 746 & 149 & 747 \\
+%{\bf Iter \#6} & 792 & 158 & 832 \\
+%{\bf Iter \#7} & 821 & 162 & 855 \\
+%{\bf Iter \#8} & 822 & 162 & 858 \\ \hline
+\end{tabular}
+\caption{Grouping of Event Types Based on Event Facets}
+\label{events-facets}
+\end{table}
+
+%rocket/missile launches 
+
+%corporate management succession  (two parties)
+%negotiation of labor disputes
+%sports games (MR)
+
+%microelectronic production ?
+%******************************* (ACE event types as follows)
+%election
+%Fine (amount, patient? media?)
+%meeting
+%transfer -money/ownership
+%****************************** (BioNLP evaluation events)
+%molecule activation:  cause, theme
+%disease / drug/ treatment/diagnosis
+
+Table \ref{events-facets} lists 14 event domains that I categorize according to 
+the event facets they share. The event domains are mostly from 
+community-wide performance evaluations, including 
+Message Understanding Conferences (MUCs) and 
+Automatic Content Extraction (ACE) evaluations. 
+%Many of the event types are accompanied by human annotations 
+%for event recognition or extraction modeling purposes.
+For many types of events in the list, human annotations were provided for event 
+recognition or extraction purposes.
+Benefitting from the availability of gold annotations, 
+events such as terrorism, management successions and 
+disease outbreaks have been extensively studied in the community.
+This table is not meant to be seen as an ontology of events that 
+%covers major types of events.  
+systematically categorize major types of events. 
+Neither are the event facets 
+%that are 
+shown in the table 
+%are inclusive.
+the only possible facets. 
+Rather, I take the event types that have been relatively well studied 
+as examples and aim to demonstrate that event facets are key factors in  
+event structures. 
+Furthermore, my analysis on event facets is driven by real texts that 
+describe particular types of events and aims to 
+shed light on how event facets can be useful 
+in the practice of event recognition.   
+
+%and can provide guide  
+%Many of them have been ex
+%Then, I will  
+Roughly, Table \ref{events-facets} groups 14 event types into 6 categories.
+%As explained previously, 
+The first group of events shares two event facets, agents and purpose. 
+By definition, civil unrest is a broad term that is typically used 
+by the media or law enforcement to describe a 
+form of public disturbance caused by a
+group of people for a purpose.
+In text, civil unrest event descriptions also generally refer to  
+population groups that participate unrest events and specific purposes 
+that motivate the events. 
+Similarly, referendums feature event agents and purpose too. 
+%Civil unrest events generally involve specific types of 
+%agents, such as 
+%The first event domain that I have analyzed is terrorism. Terrorism events have been the target domain of multiple MUC evaluations. 
+
+While purpose can be useful to distinguish between a variety of event types, 
+it may not be explicitly stated in event descriptions.
+%In many terrorism event descriptions, the agents are not explicitly stated,  
+However, effects (consequences) of events are commonly conveyed in 
+reports of large-scale influential events because effects generally 
+can well reflect impacts of the events and explain why the events are newsworthy.
+Therefore, the second group of events, including terrorism events and 
+military operations, features event facets agents and effects. 
+For example, 
+the human casualties or physical losses resulting from the terrorism (effects) 
+%events, tend to be more important and 
+are commonly emphasized 
+in terrorism descriptions. 
+%For practical considerations, I will focus on event facets that tend to appear in event descriptions in text.  
+%However, depending on the types of event, other facets will play the event defining roles. 
+
+There are also natural events that are initiated by 
+the 
+nature, such as natural disasters and disease outbreaks, 
+where the effects of the events are also important. 
+In addition, natural events generally 
+share the event facet cause. 
+For example, 
+a volcanic eruption is caused by a volcano.
+Note that natural events are different from 
+%artificial 
+civil unrest events or terrorism events, which are perpetrated by 
+%the 
+humans, 
+%such as , 
+%the 
+and natural events do not 
+%have 
+%explicit 
+%feature 
+have agents or 
+purpose of the agents. 
+%, however, they share the event facet causes. 
+%For example, 
+%a volcanic eruption is caused by a volcano.
+
+In my 
+%categorization, 
+event facet analysis, 
+%a large group of 
+several types of events 
+%feature the event facet patients. 
+have a ``patient'' facet as a defining characteristic. 
+This group covers specific event types such as vehicle crashes and 
+corporate acquisitions. 
+%and stock index changes. 
+These event types seem distinct from each other, however, 
+across all these events, the patients
+%of the event 
+are central 
+in their event structures. 
+%and a flood is
+%caused by a sea or river.
+%Differently, in vehicle crash events or corporate acquisition events, the patients of the event are essential because 
+%%There are other types of event where effects of events are also essential, e.g., 
+For example, some vehicle must have been crashed in vehicle crash events 
+while a corporate acquisition event report 
+should have described the company that is acquired. 
+
+There are also events that involve a transfer of 
+certain physical objects or abstract concepts 
+from one party to the other. I will name the 
+transferred objects or concepts as position, the 
+party that acquires the position as agents and the party that gives up the position as 
+patients of events. 
+%Political elections, 
+Management successions 
+%and nomination events 
+%and fine events 
+fall into this category. 
+In 
+%these two 
+such types of events, 
+%the mediums are 
+the positions can be 
+%senator or 
+president
+%(e.g., president) 
+that 
+%a nomination or 
+a management succession event targets. 
+%In fine events, the medium turns to be monetary values. 
+
+I also identify one category of event that involves two agent parties. 
+For example, negotiations generally involve two agents speaking,  
+similarly for meeting conversations. In sports games or other competitions, 
+two agent parties are essentially the main factors of events. 
+
+%I identify political elections as the last type of event.
+%This event category is also characteristic of 
+%agent, patient and position, which is similar to 
+%nomination and 
+%management succession events. 
+%In elections, the agent refer to the voters 
+%and the patient refer to the candidates. 
+%However, because elections are in essence competitions between candidates, 
+%similar to events in the previous category, 
+%election events feature more than one patient.
+
+
+Through the above analysis, we can see that event facets are 
+important to accurately recognize events in text and also important to categorize events. 
+While event facets can vary depending on specific types of events, 
+Table \ref{events-facets} may provide useful guidance on how to 
+think about and identify event facets that can effectively reveal event structures. 
+%The mediators of events also define different types of events. 
+%In general, the mediator are the object that plays a positive but indirect role in an event involving other participating objects.
+%For example, management succession events involve the persons that leave and succeed some management positions. 
+%But in the first place, management succession events should occur in companies and in high level management positions such as chairman and division president.
+%They are different from the events that happen in govermental departments and the events that happen in companies but in lower level positions such as 
+%group leaders within certain departments.  
+%Differently, in sports game reports, subevents will play a key role.   
+%Other event facets include intrumental objects or props involved in events. 
+%E.g., in military operation descriptions, the weapon information tends to indicate the parties involved in the events. 
+%And in civil unrest gatherings, the banners held by the protesters are also indicative of the events. 
+%Identifying event facets that are essential to many different types of event will make the multi-faceted event recognition approach generalizable and 
+%will be pursued more thoroughly in this proposal.
+
+
+
+%Table \ref{events-facets} shows my first attempt to group events based on the event facets that they share.  
+
+
+\section{Multi-faceted Event Recognition: Using both Event Expressions and Event Facets}
+\label{multi-faceted-idea}
+%The goal of my research is to recognize event descriptions in text by identifying
+%event expressions as well as defining characteristics of the event.
+My research explores the idea of {\it multi-faceted event
+  recognition}: using event expressions as well as facets of the event
+%(for example, agents and purpose) 
+to identify documents about
+a specific type of event.  
+In addition to event expressions, event facets can provide 
+valuable complementary information to accurately detect documents describing 
+a particular type of events. For example, as illustrated previously, 
+using the event keyword ``rally'' alone won't unambiguously recognize 
+civil unrest event descriptions because ``rally'' is frequently used 
+to refer to other types of events too, 
+e.g.,{\it ``car rally''}, {\it ``tennis rally''}.  
+However, if we 
+%further 
+know 
+%about 
+the agents or purpose of 
+%events, 
+an event, we can 
+better picture the event scenario and determine what type of event 
+is being discussed in text. For example, in addition to the event keyword 
+``rally'', knowing that the event participants (agents) are ``coal miners'' or the 
+goal 
+%people ``rally'' 
+of the rally is to ``press for higher wages'', we immediately 
+gain confidence that some civil unrest event is being referred to. 
+Event facet information is so valuable that observing multiple types of 
+event facets in text can 
+%also indicate the occurrence of 
+sometimes suggest a particular type of event 
+event without an event phrase.
+For example, without seeing any explicit event expression, if both 
+a 
+%typical 
+plausible civil unrest agent (e.g., ``coal miners'') and a 
+%typical  
+plausible
+civil unrest purpose (e.g., ``press for higher wages'') are mentioned in 
+the context, then we 
+%are also almost certain 
+may hypothesize 
+that a civil unrest event 
+is being discussed.
+
+
+
+% Ruihong -- we didn't evaluate the quality of the dictionaries
+% directly, did we? -emr
+% The evaluations show that our jacknifing bootstrapping system is able
+% to learn high quality lexicons of event phrases and the other two
+% types of event information.  
+
+% Let's see how these results turn out...
+% On top of event keywords, these lexicons
+% help to achieve more accurate event recognition.  In addition, when
+% applying the learned lexicons to articles containing no event
+% keywords, many events are detected and most of them are relevant
+% events.
+%\begin{figure}[htbp]
+% \centering
+%% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 4in]{figures/flow-chart_4.eps}
+% \caption{Bootstrapped Learning of Event Dictionaries}
+%\label{flow-chart}
+%\end{figure}
+
+% Ruihong -- a RESEARCH paper should not have a section header called System Description. 
+% The header should describe what the approach is, emphasizing what is novel about it.
+% \section{System Description}
+
+\section{Bootstrapped Learning of Event Dictionaries}
+\label{bootstrapping-cu}
+%show examples, or add an analysis section, quick manual filtering? yes. it seems reasonable in practice. report how many phrases/terms were removed.
+I present a bootstrapping framework to
+automatically learn event phrase 
+and event facet 
+%agent, and purpose
+ dictionaries. 
+% from a large text collection using a small amount of seeding. 
+The learning process uses unannotated texts and minimal human supervision 
+that includes a few event
+keywords and seed terms for 
+%common agents and
+%purpose phrases 
+each type of event facet 
+associated with the event type. 
+% First, the event keywords
+%  are used to identify documents that are potentially
+% relevant  to the event.\footnote{This step could be
+% skipped entirely if an event-specific document collection is
+%   available.}
+% Note that
+% the event keyword retrived articles are a mixture of event relevant
+% texts and irrelevant texts.  
+% The bootstrapping algorithm then ricochets back and forth 
+%  learning event phrases and learning agent/purpose phrases.
+My bootstrapping algorithm exploits the observation that event expressions 
+%,
+%agents, and purpose phrases
+and event facets often appear together in  text regions that 
+introduce an event.  
+Furthermore, seeing multiple types of event information in a 
+%succinct 
+localized 
+text region ofen implies that a relevant event is being described 
+and we can look for additional types of event information 
+within the same text region.
+Based on 
+%the above 
+these observations, I designed a bootstrapping algorithm 
+that ricochets back and forth, alternately 
+learning new event phrases and learning new 
+%agent/purpose phrases, 
+event facet phrases in
+an iterative process. 
+
+
+Specifically, each learning iteration of the bootstrapping algorithm 
+consists of two learning stages.
+The first stage is designed to learn event phrases 
+while the second stage is to learn event facet phrases.
+%Event phrases will be learned in the first stage while 
+%event facet phrases are 
+In the following sections, I will elaborate with more details 
+on how 
+the two learning stages proceed.
+
+\subsection{Stage 1: Event Phrase Learning}
+The learning process will start with unannotated texts.
+Because a particular type of event, for example 
+civil unrest events or plane crashes, 
+%are rarely seen 
+do not happen constantly and  
+%rarely seen 
+ therefore are relatively infrequent 
+in a broad coverage collection of news reports, 
+a small 
+%amount 
+number of event keywords can be used to create 
+a pseudo domain specific corpus by requiring each document 
+in the corpus to contain at least one event keyword. 
+However, as explained 
+%in Section\ref{intro-section}
+previously, event keywords are not sufficient to 
+obtain relevant documents with high precision, so the extracted stories
+are a mix of relevant and irrelevant articles. 
+% Furthermore, 
+% even in the relevant articles, many of the sentences do not mention the event.
+My algorithm first selects text regions to use for learning, and then
+ harvests event expressions from them. 
+
+\vspace{.1in}
+\textbf{Event Region Identification}
+\vspace{.1in}
+Event facets, as defining characteristics of 
+events, can effectively be used to recognize events of a particular type.  
+Seeing multiple types of event facet information together 
+implies that the text region probably is describing a relevant event. 
+%The rationale is that 
+For example, if we see the agent ``terrorists'', 
+the patient ``the city mayor'' and the effect ``was shot to death'' 
+in a localized text region, 
+then we are almost certain that some terrorism event 
+is being described. 
+
+I identify probable event regions as text snippets that 
+ contain at least one phrase of each type of defining facet for the event.
+To initiate the bootstrapping algorithm, I will identify 
+ probable event regions using the seed terms for each type 
+of event facet. 
+%Along wih 
+As the learning proceeds, 
+new facet terms will be learned and used to enrich facet dictionaries, 
+%therefore, more and more 
+and more event regions will be identified. 
+
+\vspace{.1in}
+\textbf{Harvesting Event Expressions}
+\vspace{.1in}
+Although event expressions and event facet information 
+can appear in text as a variety of complex forms 
+(can be whole sentences for example), 
+to constrain the learning process, I require 
+both event phrase and event facet expressions to match
+certain syntactic forms. 
+%This will make the learning process focused. 
+%Furthermore, 
+Additionally, I require predefined dependency relations 
+between event expression and event facets, and between 
+pairs of event facets if needed.
+The dependency constraints will further purify 
+the learning process to 
+%well 
+control the quality of 
+learned event expressions and event facet phrases. 
+Only event expressions that match the defined 
+syntactic forms and 
+%fit 
+occur in the dependency relations with 
+facet phrases will be extracted. 
+
+Naturally, both types of syntactic constraints 
+%are domain specific
+depend on the set of event facets that 
+characterize a specific type of event. 
+%Given a particular type of event, 
+When some event facets become different and accordingly their semantics, 
+syntactic forms used to identify 
+individual event expressions 
+and event facet candidates 
+as well as dependency relations 
+among them can be different too. 
+
+
+\subsection{Stage 2: Event Facet Phrase Learning}
+Similarly, the stage for event facet learning also consists of 
+two steps, event region identification and event facet phrase extraction. 
+However, different from the first stage where only one learning process 
+goes on to learn event expressions, multiple learning processes 
+are active in this stage, one per event facet. 
+Each learning process is to learn phrases of a particular type of event facet 
+and they will proceed in parallel.
+
+\vspace{.1in}
+\textbf{Event Region Identification}
+\vspace{.1in}
+%After some event phrases have been learned, 
+To identify event regions for learning phrases of a particular event facet,
+I use the event expressions and event facet phrases 
+of all types except the event facet type that is to be learned. 
+Specifically, the text regions that contain at least one event expression 
+and one facet phrase of all the other types are selected. 
+The event expressions and event facet phrases are from the dictionaries 
+that have been learned 
+%at the time point. 
+up to this point.  
+
+\vspace{.1in}
+\textbf{Harvesting Event Facet Phrases}
+\vspace{.1in}
+Similar to event phrase learning, 
+%both syntactic structures 
+%for individual pieces of event information and dependency structures 
+%among different types of event information will be enforced too. 
+%Therefore, 
+only event facet candidates that match certain 
+syntactic forms and occur in the predefined dependency structures will 
+be extracted.
+
+%how? what if event facets and event expressions do not come from the same sentence altogether.
+%Event expressions: two types of event phrases with certain syntactic structures, any span between two facets but spans should be regularized somehow,
+% maybe using some different syntactic structures, such as ``KEYWORD of''. 
+%Original design, using facet seed to initiate co-training because event expressions can be diverse and less frequent than some facet seeds.
+%But in disease outbreak, assume we use an (less ambiguous, strongly domain indicative) event keyword ``disease'' to get 
+%the domain-specific collection of documents, then some individual event indicative expressions ``outbreak of'' may be safely used to 
+%extract event facet information, -> disease agents
+%Also in terrorism, ``kidnapping of'' or ``murder of'' -> themes. 
+%strongly indicative event expression to initiate the co-training, given ``disease''
+
+As mentioned previously, both types of syntactic learning constraints 
+are 
+%domain specific. 
+dependent on set of facets. 
+Given a particular type of event, we need to first 
+identify its set of event facets, then according to 
+their semantics, 
+certain syntactic forms need to be considered to learn event facet phrases. 
+%Second, the bootstrapping algorithm as described in Section \ref{bootstrapping-cu} 
+%has required 
+Furthermore, dependency relations between an event facet and event expressions, 
+and dependency relations between 
+different types of event facets
+also need to be modified to reflect their specific relations in a particular type of events.
+
+
+
+\subsection{Defining Syntactic Forms to Harvest Event Facets}
+
+The event facets that I have 
+%been aware of 
+identified 
+fall into two classes. 
+The first class covers the 
+%object 
+entities that participate or are involved in events, 
+such as agents and patients of events. 
+The other class covers 
+%other events 
+states, goals and actions that are 
+in certain relations with the target event, 
+such as effects/consequences and reasons/purposes of events. 
+%The facet causers can be both object entities and events depending on the types of events concerned. 
+%As to the syntactic constructions to harvest different types of event facet information,  
+The event facets that fall into the first class are generally noun phrases when appearing in text 
+and syntactically, they can 
+%perform 
+be subjects of verbs, objects of verbs or objects of prepositions.  
+%For civil unrest events, I have required agents to be subjects of event phrases, 
+%but other event facets in the first class will probably be seen in different syntactic positions. 
+For example, agents are generally subjects of event phrases 
+while patients 
+%might be 
+are commonly seen as direct objects in event phrases. 
+%while media can be objects in the prepositional phrases 
+%that are attached to event phrases. 
+In contrast, the event facets in the second class, such as purposes, 
+can be formed as verb phrases  
+%as shown in Figure \ref{phrase-syntax}.
+%But certainly, different phrasal structures or simple clausal forms might need to be used 
+%to learn other types of event facets in this class.
+%other phrasal structures 
+or simple clausal forms.
+For example, to learn effects together with patients of terrorism events, 
+%while verb phrase structures as in Figure \ref{phrase-syntax} 
+simple verb phrases in active voice
+may capture many effect realizations (e.g., ``destroyed an office building'' in terrorism events.), 
+effects can be seen as verb phrases in passive voice too, due to its semantics, 
+for example, ``many houses were damaged.''. 
+In addition, effects commonly occur in text as 
+%possessive phrases, 
+prepositional phrases, for example, ``murder of the President'' 
+and ``killing of university students''. 
+%Therefore, to learn event facets and event expressions for a particular type of events, 
+%several types of syntactic constructions need to be considered depending on the specific event facets 
+%and how they are realized in texts. 
+%However, while in the prior work, I required the purpose phrases to be associated with event phrases with respect to a certain dependency relation (``xcomp''),  
+%this relation may not hold for effect phrases. 
+
+
+\subsection{Linking Event Facets to Event Expressions}
+
+%he bootstrapping algorithm has been originally proposed to operate on single sentences. 
+The general observation that guides the bootstrapping algorithm 
+is that event facet information and event expressions 
+tend to occur close together in event descriptions. 
+In addition, to constrain the learning process, 
+certain dependency relations should be 
+required between event expressions and an event facet, 
+and between different types of event facets. 
+%introductory sentences.
+But the closeness that is necessary for a successful learning process 
+varies depending on the event types, similarly for 
+the dependency relations.
+For example, in civil unrest event descriptions, 
+I have frequently seen event introductory sentences that 
+contain an event expression, an agent, as well as the purpose of the event. 
+However, I have also observed that in terrorism event descriptions, 
+while event expressions and agents are often coupled, they occur 
+occur in different sentences from the sentence that 
+describes the patient and effect information. 
+
+%Furthermore, with respect to different event types, 
+%dependency structures that are required between 
+%different types of event information can be different too.
+%This is consistent with the changes of event facets and their semantics 
+%with a different type of event. 
+
+%Therefore, when moving to a different event domain, these restrictions can be modified or loosened 
+%as long as the algorithm design still obeys the general observation.
+
+% The 
+% bootstrapping process then repeats, alternately learning more event
+% expressions using the agent and purpose dictionaries, and learning more
+% agent and purpose phrases using the event phrase dictionary.
+
+% Ruihong- this level of detail doesn't belong in the intro.
+% event. In addition, these three types of event information are nicely
+% positioned in their corresponding syntactic positions
+% routinely. Specifically, agents are generally seen in subject position
+% of sentences.  Event expressions tend to be the main verb phrases
+% while purposes occur in sentences as verb phrases assisting main verb
+% phrases.
+% 
+%  begins by identifying sentences 
+% that  contain at least one agent seed and at least one 
+% purpose phrase. 
+%Dependency parsing is applied to the identified sentences and event expressions are learned as the main verb phrases 
+%from the sentences where the subjects are one of the agent seeds and the 
+% Event expressions are learned from the sentences satisfying certain syntactic constraints. 
+% Dependency parsing is applied to the identified sentences to aid the syntactic constraint checking.
+% In the second stage, 
+%both learned event expressions and the agent seeds are used to match with the corpora to 
+%find sentences that contain one or more event expression and one or more agent. 
+%With these sentences, new purposes not already in purpose seeds will be learned.
+%Similarly, sentences containing one or more event expression and one
+%or more purpose seed are used to learn new agents
+
+%what's the claim here? event phrases better? all different information pieces are necessary?
+
+% Better coverage and accuracy than what?! Are you claiming your
+% method is better than previous methods? THen we need baselines to
+% show that... -emr
+% We propose to learn multiple types of
+% event information in a single bootstrapping system to achieve better
+% coverage and higher accuracy in event recognition.  
+
+%We evaluate the lexicon of three types of event information learned by our jacknifing bootstrapping system by using them to carry out better event recognition.
+%Compared with event keyword matching and document classification baselines, our event recognition system employing only the learned lexicons work well.
+%We also plug the event information lexicon into classification and it
+%works well too.
+
+%removed
+%I explore several ways of using these bootstrapped dictionaries. 
+%I conclude that
+%finding at least two different types of event information produces
+%high accuracy (88\% precision) with good recall (71\%) on documents
+%that contain an event keyword. We also present experiments with
+%documents that do not contain event keywords, and obtain 74\%
+%accuracy when matching all three types of event information. 
+
+
+%Our work focuses on civil
+%unrest events. 
+%  until no new terms can be learned.
+% Ruihong -- is this true or do we do a fixed number of iterations or use some other criteria?
+
+
+
+%intro
+% Event expression learning is key to event recognition. 
+%corpus is noisy, so sentence identification first.
+
+% Ruihong -- please list what these keywords are.
+
+
+% Initially, the agent and purpose dictionaries consist
+% only of the seed phrases (shown above). As bootstrapping
+% progresses, the agent and purpose dictionaries grow, enabling more
+% event-relevant sentences to be extracted.
+
+%For example, in civil unrest event, ``protesters'', ``activists'', ``students'' and ``crowd'' can be used as agent seedss,
+% and ``to demand'' and ``protesting'' can be purpose pattern seeds.
+% The agent seeds and purpose patterns are matched with a large set of unannotated articles. 
+
+% Ruihong: The paragraph below has a lot of redundancy...
+% Both seeing an agent seed and seeing a purpose pattern in one sentence
+% signals that a relevant event might be described and seeing both an
+% agent and a purpose pattern cooccuring in one sentence strongly
+% suggests that a relevant event is described.  Therefore, we identify
+% sentences in the unannotated articles which contain both an agent seed
+% and a purpose pattern.  These sentences are likely to describe a
+% relevant event and potentially contain an event expression.
+
+%are extracted from the sentences in the unannotated articles that 
+%contain both one agent seed and one purpose pattern seed.
+
+
+
+% Dependency parsing is applied to the probable event sentences, and 
+
+% EMR2: not agents, only purposes, right?
+% New agent and purpose phrases are harvested based on the
+
+% Sentences taking one event expression as their main verb phrases and containing
+% the ``xcomp'' dependency relation will be identified.  
+% EMR2: changed verb phrase to event phrase (twice)
+
+
+
+%Similarly, in the other learning process in the second stage, the event expressions learned from stage 1 and the agent seeds 
+%will be matched with the large set of unannotated articles and sentences containing both event expressions and agent seeds are identified.
+%Then, dependency parsing will be applied to the identified sentences.
+%Based on their dependency structures, the sentences having one agent seed as their subjects and one event expression as their main verb phrases are picked.
+%If the picked sentences also contain one ``xcomp'' dependency relation and the head of it is the main verb phrase, 
+%then the dependents of the ``xcomp'' dependency relation in the picked sentences become the purpose candidates. 
+%Purpose candidates that co-occurs with at least two unique event expressions and at least two purposes are ouput as learned purposes.
+
+
+%If categories of event information are explored later, they will be learned in the second stage too by adding in more learning processes here.
+%The learning process is similar with the above two processes.
+%Sentences containing at least one event expressions learned from stage 1 and at least one term from all other categories of event information 
+%will be used to learn the event information of one particular category.
+
+% The new agent and purpose phrases are added to our dictionaries, and
+%
+
+% This sentence got cut off ....not sure why it is here. -emr
+% To maintain the quality of blearning, at least
+% two unique agents and two unique purposes should be seen to co-occur
+% with
+
+
+
+% Specifically, we require an agent term to satisfy
+% {\small $\text{event-relevancy-ratio} >= \frac{1}{1000}$}.\footnote{This is a small number, .. }
+% %{\it sanity check criteria go here..}
+%
+% Concretely, we require a valid event phrase or a valid purpose phrase to satisfy
+% {\small $\text{domain-relevancy-ratio} >= \frac{1}{3}$}.\footnote{This implies that the target phrase or term is 3 times common
+% in the domain-specific corpora than in the domain-general corpora because the sampled documents with no event keyword are 9.5 times
+%  of the documents containing an event keyword.}
+
+
+%Agent terms such as ``employees'' and ``veterans'' can be frequent in both domain-specific corpora and domain-general corpora,
+%so to carry out sanity checking for agents, we rely on the first metric {\it event-relevancy-ratio} and requires that all valid agents should satisfy
+
+
+
+
+%Different from agents, event phrases and purpose phrases can be quite domain-specific,
+%so we mainly rely on the second metric {\it domain-relevancy-ratio} as the sanity checking condition.
+%But sometimes even its {\it domain-relevancy-ratio} is not high enough, if a phrase is quite common in the domain specific corpora,
+%it should raise the possibility that the phrase is valid too. Specifically, we require a valid event phrase or a valid purpose phrase to satisfy
+
+\section{Bootstrapped Learning of Event Dictionaries for Two Event Domains}
+In this section, I will describe specific syntactic constructions 
+and dependency structures
+that are needed to constrain the learning of both 
+event expressions and event facet information 
+in two concrete domains: civil unrest events 
+%domain 
+and terrorism 
+events. 
+
+\subsection{Learning Dictionaries for the Civil Unrest Event Domain}
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5.5in]{figures/faceted/flow-chart_cu.eps}
+ \caption{Bootstrapped Learning of Event Phrases and Event Facet Phrases for Civil Unrest Event Domain.}
+\label{chap5:multi_faceted_flow_chart_cu}
+\end{figure}
+
+For civil unrest events, 
+I have identified agents and purpose as two event facets.
+Overall, my bootstrapping approach consists of two stages of learning as shown
+in Figure \ref{chap5:multi_faceted_flow_chart_cu}.  The process begins with a few
+agent seeds, purpose phrase patterns, and unannotated articles
+selected from a broad-coverage corpus using event keywords.  In the
+first stage, event expressions are harvested from the sentences that
+have both an agent and a purpose phrase in specific syntactic
+positions.
+% and are likely to contain relevant events
+In the second stage, new purpose phrases are harvested from sentences that contain both an event phrase 
+and an agent, while new agent terms are harvested from sentences that contain both an event phrase and a purpose phrase. 
+%At the same time, 
+%then the event information of the type not used to retrieve those sentences are extracted 
+%from its corresponding syntactic position in the retrieved sentences. 
+The new terms are added to growing event dictionaries, and the 
+bootstrapping process repeats. 
+
+\begin{table}[htbp]
+\small
+\centering
+\begin{tabular}[center]{|c|c|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Agents} & protesters, activists, demonstrators, \\
+             & students, groups, crowd, workers, \\
+             & palestinians, supporters, women  \\ \hline 
+{\bf Purpose} & demanding, to demand, \\
+{\bf Phrases}	& protesting, to protest \\ \hline
+
+\end{tabular}
+\caption{Agent and Purpose Phrases Used for Seeding in the Civil Unrest Domain}
+\label{seed-table}
+\end{table}
+
+I first extract potential civil unrest stories from the English Gigaword
+corpus \cite{Gigaword} using six civil unrest keywords\footnote{The keywords include ``protest'',
+``strike'', ``march'', ``rally'', ``riot'' and ``occupy'', 
+or their variations}. 
+The input in stage 1 consists of a few 
+%event-specific 
+agent terms and
+purpose 
+patterns 
+%phrases
+%\footnote{the verb part of purpose phrases, each pattern will be instantiated into multiple phrases} 
+for seeding. The  agent seeds are single nouns, while the purpose
+patterns are verbs in infinitive or present participle forms.  Table
+\ref{seed-table} shows the agent terms and purpose 
+%patterns 
+phrases
+used in the experiments.  The agent terms were manually selected by
+inspecting the most frequent nouns in the documents with civil unrest
+keywords.  The purpose patterns are the most common verbs that
+describe the reason for a civil unrest event. 
+
+As explained previously, to constrain the learning process, I require event expressions and
+purpose phrases to match certain syntactic forms. 
+% our systems only learn event expressions with the defined structures,
+I apply the Stanford dependency parser \cite{Marneffe06} to the probable event sentences, 
+which contain at least one phrase from each event facet, 
+to identify verb phrase candidates
+% for event expressions and purpose phrases 
+and to enforce
+syntactic constraints between the different types of event information. 
+%In the following, I will describe the specific syntactic constructions 
+%that are used to harvest event expressions and event facet phrases, 
+%also I will describe the dependency structures between different types of event information.
+
+\vspace{.1in}
+{\bf Syntactic Forms}
+\vspace{.1in}
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+ \includegraphics[width = 3.2in]{figures/faceted/phrase_structure_arg.eps}
+ \caption{Phrasal Forms of Event \& Purpose Phrases for Civil Unrest Events}
+\label{phrase-syntax}
+\end{figure} 
+For our purposes, we learn agent terms that are single nouns, 
+specifically, they are heads of noun phrases. 
+Both event phrases and purpose phrases are verb phrases.
+Figure \ref{phrase-syntax} shows the 
+%describe phrase syntax
+two types of verb phrases that the system learns.  One type consists of a verb paired with
+the head noun of its direct object (dobj). For example, event phrases can be {\it ``stopped work''}
+or {\it ``occupied offices''}, and purpose phrases can be {\it ``show support''}
+or {\it ``condemn war''}.  The second type consists of a verb and an attached
+prepositional phrase, retaining only the head noun of the embedded noun phrase.
+For example, {\it ``took to street''} and {\it ``scuffled
+with police''} can be event phrases, while {\it ``call for resignation''} and
+{\it ``press for wages''} can be purpose phrases.  In both types of verb phrases, a particle can
+optionally follow the verb.  
+
+\vspace{.1in}
+{\bf Dependency Relations between Facets and Event Expressions}
+\vspace{.1in}
+
+Event expressions, agents, and purpose phrases must
+appear in specific dependency relations, as illustrated
+in Figure \ref{sentence-syntax}.  
+%An event expression must be the
+%main verb phrase in a sentence.  
+An agent must be the syntactic
+subject of the event phrase.  A purpose phrase
+must be a complement of the event phrase, specifically, 
+I require a particular dependency relation, ``xcomp''\footnote{In the dependency parser, 
+``xcomp'' denotes a general relation between 
+a VP or an ADJP and its open clausal complement. For example, in the
+sentence {\it ``He says that you like to swim.''}, the ``xcomp''
+relation will link ``like'' (head) and ``swim'' (dependent). With my
+constraints on the verb phrase forms, the dependent verb phrase in
+this construction tends to describe the purpose of the verb phrase.},  
+%as defined in (dependencies\_manual), 
+between the two verb phrases.
+%an ``xcomp'' dependency relation). 
+% , ``xcomp'' as defined in (dependencies\_manual), 
+% between the event phrase and the purpose phrase.
+% In the dependency parser, ``xcomp'' denotes a general relation between
+% a VP or an ADJP and its open clausal complement. 
+For example, in the sentence {\it ``Leftist activists
+  took to the streets in the Nepali capital Wednesday protesting
+  higher fuel prices.''}, the dependency relation ``xcomp'' links
+ {\it ``took to the streets''} with {\it
+  ``protesting higher fuel prices''}. 
+
+% , and we can verify that both verb phrases are in our defined verb phrase structures, in this case, the 
+% dependent verb phrase of the dependency relation ``xcomp'' is the 
+% purpose of the head verb phrase {\it ``took to the streets''}.  
+
+% Ruihong -- I don't understand this paragraph ...
+% If an agent term is the subject of a sentence, the dependency
+% relation ``xcomp'' is detected between two verb phrases that fit in
+% our defined syntactic structures (Fig \ref{phrase-syntax}) and the
+% dependent verb phrase of the ``xcomp'' dependency relation is one of
+% the instantiation of our purpose pattern, the head verb phrase of the
+% ``xcomp'' dependency relation will be identified as an event
+% expression candidate.  Collectively, if an event expression candidate
+% co-occurs with at least two unique agent seeds and at least two unique
+% purposes in all the retrieved sentences, it will be output as an event
+% expression.
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2.5in]{figures/syntax_structure.eps}
+ \includegraphics[width = 4.2in]{figures/syntax_structure.eps}
+ \caption{Syntactic Dependencies between Agents, Event Phrases, and Purpose Phrases}
+\label{sentence-syntax}
+\end{figure} 
+
+Given the syntactic dependencies shown in Figure \ref{sentence-syntax}, 
+with a known agent and purpose phrase, I extract 
+the head verb phrase of the ``xcomp'' dependency relation as an
+event phrase candidate. 
+%After all event phrases have been harvested, 
+The event
+phrases that co-occur with at least two unique agent terms and two unique
+purposes phrases are saved in our event phrase dictionary.
+
+The sentences that
+contain an event phrase and an agent are used to harvest more
+purpose phrases, while the sentences that contain an event phrase
+and a purpose phrase are used to harvest more agent terms.
+Purpose phrases are extracted from the
+phrasal forms shown in Figure\ref{phrase-syntax}. 
+In the learning process for agents, if a sentence has an event
+phrase as the head of the ``xcomp'' dependency relation and a purpose
+phrase as the dependent clause of the ``xcomp'' dependency relation,
+then the head noun of the syntactic subject of the event phrase is harvested as a
+candidate agent term.  I also record the modifiers appearing in all
+of the noun phrases headed by an agent term. 
+% EMR: took this out to save space. 
+% The modifiers can be
+% adjectives such as ``angry'' and ``radical'' or nouns such as
+% ``thousand'' and ``labor''.  Some modifiers represent important domain
+% attributes (e.g., ``labor unions'' represent a segment of the work
+%  force that often engage in civil unrest), while other modifiers
+% represent domain-independent attributes (e.g., ``a thousand
+% people'' just represents  size).   
+%We require a valid agent candidate to co-occur with at least two different
+%modifiers 
+%that have co-occured with 
+%of known agent terms.
+% (based on our agent dictionary)
+%. 
+% Ugh -- I'd love to remove the number constraint. Very big hack!
+%  Quite often, the agents are modified by
+%  numbers, such as ``100 students'', since civil unrest events tend to
+% involve a group of people, so we also require a valid agent candidate
+% to have a number modifier. 
+Agent candidates that co-occur with at
+least two unique event phrases and at least two different
+modifiers of known agent terms are selected as new agent terms. 
+%  and at least one unique purpose,
+% then it will be deemed to be an agent.
+
+The learning process for purpose phrases is analogous. If the
+syntactic subject of an event phrase is an agent and the event phrase is the head
+of the ``xcomp'' dependency relation, then the dependent clause of the ``xcomp''
+dependency relation is harvested as a candidate purpose phrase.  Purpose
+phrase candidates that co-occur with at least two different event
+phrases 
+% This seems unnecessary -emr
+%and at least one agent seed
+are selected as purpose phrases.
+
+The bootstrapping process then repeats, ricocheting back and forth
+between learning event phrases and learning agent and purpose
+phrases.
+
+\vspace{.1in}
+\textbf{Domain Relevance Criteria}
+\vspace{.1in}
+
+Because the unannotated data that is used for learning 
+civil unrest event dictionaries 
+comes from Gigaword the broad coverage corpus \cite{Gigaword}, 
+even after keyword filtering of the documents, 
+the data is still quite noisy.
+To avoid domain drift during bootstrapping, I use two additional
+criteria to discard phrases that are not necessarily associated
+with the domain.
+
+% Two categories of verb phrases, event phrases and purpose phrases, can be quite domain-specific.
+% For example, ``walked off job'' and ``chanted slogans'' almost always refer to civil unrest events and
+% ``defying curfew'' and ``press for hikes'' are typical purposes in
+% civil unrest events.
+For each event phrase and purpose phrase, I estimate its {\it
+  domain-specificity} as the ratio of its prevalence in
+domain-specific texts compared to broad-coverage texts. The goal is to
+discard phrases that are common across many types of documents, and
+therefore not specific to the domain. I define the
+domain-specificity of phrase $p$ as:
+
+%\begin{center}
+%{\small  $\text{domain-specificity(p)} = \frac {\text{frequency of p in domain-specific
+%corpus}}{\text{frequency of p in broad-coverage corpus}}$}
+%\end{center}
+
+\begin{center}
+{\small  domain-specificity(p) = $\frac {frequency~of~p~in~domain-specific~corpus}{frequency~of~p~in~broad-coverage~corpus}$}
+\end{center}
+
+I randomly sampled 10\% of the Gigaword texts that contain a civil
+unrest event keyword to create the ``domain-specific'' corpus, and 
+randomly sampled 10\% of the remaining Gigaword texts 
+%(without
+%a civil unrest keyword) 
+to create the ``broad-coverage''
+corpus.\footnote{The random sampling was simply for efficiency
+  reasons.} Keyword-based sampling is an approximation to
+domain-relevance, but gives us a general idea about the prevalance of
+a phrase in different types of texts.
+
+% Roughty, the documents with no event keyword are 10 times of the
+% documents containing an event keyword in Gigaword.  Then we count the
+% number of times a target phrase and a target term is matched in the
+% two samples and times it with 10 to get the real statistics.
+
+% Different from two types of verb phrases, agent terms such as ``employees'' and ``veterans''
+% %examples: reporters, officials, players
+% % can be frequent in both domain-specific corpora and domain-general
+% % corpora and they probably occur in both event and non-event
+% % contexts.
+% However, if an agent term only occur in event sentences quite a small amount of times,
+% bringing in the term and populating all its occurrences in the following learning processes will be risky.
+% For example, ``reporters'' and ``officials'' might be involved in civil unrest events as agents sometimes, but much more often,
+% they occur in other contexts too.
+
+For agent terms, our goal is 
+to identify people who participate as agents of civil unrest events.
+Other types of people may be commonly mentioned in civil unrest
+stories too, as peripheral characters.
+%  and not the main participants. 
+For example, police may provide security and reporters may provide
+media coverage of an event, but they are not the agents of the
+event. 
+%To better identify agents, 
+% EMR2: edited below -- the previous version contradicted itself by
+% claiming that the denominator was a random sample (10%) from the Gigaword and
+% that it was domain-specific. Can't be both! I guessed the Gigaword
+% random sample was correct, but please fix this if I am wrong!
+I estimate the {\it event-specificity} of each agent term as the
+ratio of the phrase's prevalence in  event sentences compared to 
+all the sentences in the domain-specific corpus.
+%a random set of sentences.\footnote{We use all of the sentences from
+%  the randomly sampled 10\% of the Gigaword corpus.} 
+% in the domain-specific corpus.  
+I define an event sentence as one that
+contains both a learned event phrase and a purpose phrase, based on
+the dictionaries at that point in time. Therefore, the number of event
+sentences increases as the bootstrapped dictionaries grow.
+I define the event-specificity of phrase $p$ as:
+
+%\begin{center}
+%{\small $\text{event-specificity(p)} = \frac {\text{frequency of p in
+%      event sentences}}{\text{frequency of p in all sentences}}$}
+%\end{center}
+
+\begin{center}
+{\small event-specificity(p) = $\frac {frequency~of~p~in
+     ~event~sentences}{frequency~of~p~in~all~sentences}$}
+\end{center}
+
+In my experiments I required event and purpose phrases to have {\it
+  domain-specificity} $\geq$ .33 and agent terms to have {\it
+  event-specificity} $\geq$ .01.\footnote{This value is so small because
+  I simply want to filter phrases that virtually  never occur in the
+  event sentences, and I can recognize very few event sentences in
+  the early stages of bootstrapping.}
+
+
+\subsection{Learning Dictionaries for the Terrorism Event Domain}
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 6.0in]{figures/faceted/flow-chart_terrorism.eps}
+ \caption{Bootstrapped Learning of Event Phrases and Event Facet Phrases for the Terrorism Event Domain.}
+\label{chap5:multi_faceted_flow_chart_ter}
+\end{figure} 
+
+For terrorism events, 
+I have identified agents, patients and effects of patients as the event facets.
+Similarly, my bootstrapping approach consists of two stages of learning as shown
+in Figure \ref{chap5:multi_faceted_flow_chart_ter}.  The process begins with a few
+%agent seeds, purpose phrase patterns, and unannotated articles 
+seeds for each type of event facet. 
+In addition, the learning process uses the training documents in the 
+MUC-4 corpus\footnote{The Gigaword corpus is not so helpful to provide 
+in-domain documents for 
+%event dictionary learning, 
+this terrorism domain, because the evaluation data 
+of MUC-4 is specific to terrorism events that happened 
+in a specific time period (about 20 years ago), and in several specific countries in 
+Latin America.}, but the annotated labels will not be used.
+%selected from a broad-coverage corpus using event keywords.  In the
+In the first stage, event expressions are harvested from the text regions that
+have at least one term of each type of event facet. 
+%both an agent and a purpose phrase in specific syntactic
+%positions.
+% and are likely to contain relevant events
+In the second stage, 
+new facet phrases are harvested from text regions that 
+contain both an event phrase and phrases of the other types of event facets.
+%new purpose phrases are harvested from sentences that contain both an event phrase 
+%and an agent, while new agent terms are harvested from sentences that contain both an event phrase and a purpose phrase. 
+%At the same time, 
+%then the event information of the type not used to retrieve those sentences are extracted 
+%from its corresponding syntactic position in the retrieved sentences. 
+The newly learned phrases are added to the growing event dictionaries, and the 
+bootstrapping process repeats. 
+
+Table \ref{seed-table-terrorism} shows the seed terms 
+that are used as input in the first stage of learning.
+Both the  agent seeds and the patient seeds are single nouns, while the effect 
+patterns are verbs in active or passive voices.  
+%The agent terms were manually selected by
+%inspecting the most frequent nouns in the documents with civil unrest
+%keywords.  The purpose patterns are the most common verbs that
+%describe the reason for a civil unrest event.
+
+\begin{table}[htbp]
+\small
+\centering
+\begin{tabular}[center]{|c|c|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Agents} & FMLN, Front, ELN, Cartel, Farc, Mrta,\\
+             & squads, guerrillas, terrorists, criminals,\\
+             & rebels, members, individuals, assassins\\ \hline 
+{\bf Patients} & civilians, victims, priests, jesuits, students,\\
+               & women, children, vehicles, offices, residence,\\
+               & building, car, homes, houses, pipeline\\ \hline
+{\bf Effects}	& * be damaged, destroyed *, bombed *,\\
+	        & * be murdered, attacked * \\ \hline
+
+\end{tabular}
+\caption{Agent, Patient and Effect Phrases Used for Seeding in the Terrorism Domain}
+\label{seed-table-terrorism}
+\end{table}
+
+In the following section, I will describe the specific syntactic forms  
+that are used to capture 
+%individual pieces of event information
+event and facet phrases, 
+and the dependency relations 
+%among different types of event information.
+between them. 
+
+\vspace{.1in}
+{\bf Syntactic Forms}
+\vspace{.1in}
+%with examples
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+ \includegraphics[width = 2.8in]{figures/faceted/phrase_structure_new_arg.eps}
+ \caption{Three New Syntactic Structures to Extract Effect Phrases and Patient Terms for Terrorism Events}
+\label{phrase-syntax-added}
+\end{figure} 
+
+
+The same as in civil unrest events, agents of terrorism events, 
+including the terrorist individuals (e.g., ``terrorists'') and 
+terrorism organizations (e.g., ``FMLN''),
+will also be defined as single nouns. 
+In addition, patients of terrorism events are also single nouns. 
+Patients of terrorism events include the human targets, such as 
+political leaders that are assassinated, and physical targets, 
+e.g., civilian facilities that are bombed. 
+%The syntactic forms for event expressions are kept the same as 
+%civil unrest events too.
+Event expressions have to be in the syntactic forms as shown in 
+Figure \ref{phrase-syntax}, this is the same as 
+civil unrest events too. 
+For example, event phrases can be ``hit helicopters'' or 
+``carried out attacks''.
+
+By definition, effects of terrorism events are consequences 
+that happen to patients during or after terrorism activities.
+Therefore, I require that effects of terrorism events are 
+always coupled with patients,  
+specifically, patients are arguments of effect phrases. 
+%Effects and patients are 
+Multiple syntactic forms are used to identify effects 
+together with patients.
+
+First, the phrasal forms as shown in 
+Figure \ref{phrase-syntax} are also used to identify effect phrases.
+For example, effect phrases can be ``wounded {\it *}'' 
+or ``broke into {\it *}''. Note that {\it *} refers to a patient.
+In addition, due to its semantics, effects are often 
+described as verb phrases in passive voice or as 
+prepositional phrases headed by event nouns. 
+Therefore, 
+to well capture the diversity of effect expressions 
+in terrorism events, 
+%in addition to 
+%the phrasal structures as used for event expressions, 
+I add three new phrasal forms  
+(as shown in Figure \ref{phrase-syntax-added}). 
+The top one 
+identifies effect verb phrases 
+in passive voice. 
+For example, effect phrases can be ``{\it *} be shot'' 
+or ``* be destroyed''.
+The later two new phrasal forms (the bottom two) capture 
+effect phrases that occur in text as possessive forms 
+or prepositional phrases headed by nouns. 
+For example, effect phrases can be ``{\it *} \' murder''
+ (in the first case)
+or ``death of {\it *}'' (in the second case).
+
+
+{\bf Dependency Relations between Facets and Event Expressions}
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2.5in]{figures/syntax_structure.eps}
+ \includegraphics[width = 2.2in]{figures/faceted/syntax_structure_part.eps}
+ \caption{Syntactic Dependencies between Agents and Event Phrases in Terrorism Domain}
+\label{sentence-syntax-terrorism}
+\end{figure}
+
+Different from the civil unrest event domain where event expressions,  
+agents and purpose phrases must appear in the same sentence, 
+%and futhermore 
+%they must appear in specific dependency relations.
+in the terrorism domain, event phrases and the three event facets, 
+agents, patients and effects of patients do not have to appear in the same 
+sentence.
+However, following the key observation that 
+event expressions and event facet information should co-occur in 
+localized text regions, I require that terrorism event phrases and 
+the three types of facet information appear together in text segments 
+that span a small number of sentences. 
+Specifically, in my experiments, I require them to 
+occur together within at most four sentences. 
+In other words, the last sentence that contains a piece of event information 
+should be within three sentences from the first sentence that 
+contains other pieces of event information. 
+
+Furthermore, as described earlier, patients of terrorism events 
+must occur in the same sentence as effects and strictly, 
+patients must be the arguments of effect patterns. 
+In addition, as shown in Figure \ref{sentence-syntax-terrorism}, 
+agents of terrorism events must appear in texts as the syntactic subjects 
+of event phrases. 
+
+Therefore, in the first learning stage, to learn event phrases, 
+each candidate must have an agent as its syntactic subject. 
+In addition, there has to be a sentence that contains an effect phrase 
+with a patient as its argument, furthermore, the sentence must be within 
+three sentences from the sentence that contains the event phrase candidate. 
+Similarly, in the second learning stage, 
+to learn an event facet phrase, an event phrase and a phrase of the other 
+two types of facets must be seen within a text chunk of 
+at most four sentences, at the same time, the dependency relations 
+must be satisfied, specifically, agents must be the syntactic subject of 
+an event phrase and patients must be the argument of an effect phrase. 
+
+
+
+
+\section{Evaluation Design}
+%big plan
+\subsection{Data}
+% EMR: you should indicate which year's Gigaword corpus you used
+% (there are many versions) and a citation if there is one (or a
+% footnote indicating which version ala LDC's catalog).
+
+% EMR: did you use plural variants of the keywords as well (e.g., riots)?
+% If so, mention that below.
+Similar to the evaluation of the two discourse-guided event extraction 
+architectures ({\it TIER} in Chapter \ref{Chapter:TIER} and 
+{\it LINKER} in Chapter \ref{Chapter:LINKER}), I will evaluate 
+my multi-faceted event recognition approach on two distinct event domains.
+This will verify the general applicability of the multi-faceted event recognition approach 
+that aims to accurately 
+identify documents describing a particular type of event. 
+%To be consistent with the evaluations of event extraction systems 
+Specifically, I will evaluate using the same two event datasets:
+%as used 
+%in Chapters \ref{Chapter:TIER} and \ref{Chapter:LINKER}, 
+the civil unrest event dataset and the MUC-4 terrorism corpus.
+%However, instead of evaluating the performance 
+%of systems to extract individual event role fillers, 
+I will create systems that learn event dictionaries and 
+evaluate the performance of the multi-faceted 
+dictionary lookup approach 
+to {\it recognize documents that mention relevant events}.
+
+\vspace{.1in}
+{\bf Civil Unrest Event Domain}
+\vspace{.1in}
+
+%We conducted experiments to evaluate the performance of our
+%bootstrapped event dictionaries for recognizing civil
+%unrest events.  
+To refresh, civil unrest is a broad term  typically
+used by the media or law enforcement to describe a form of public
+disturbance that involves a group of people, usually to protest or promote a cause.
+%Civil unrest events include activities to protest
+%against major socio-political problems, events of activism to support
+%a cause (e.g., peace rallies or large-scale marches to support a
+%prominent figure), and events to promote changes in government or business affairs. 
+Civil unrest events include strikes, protests, occupations, rallies,
+and similar forms of obstructions or riots. 
+The dataset consists of 400 documents and they are annotated 
+as specified in Section \ref{TIER:creating-annotations}. 
+For event recognition evaluation purposes, 
+%only labels assigned 
+%in the first stage of document level annotations will be used here.
+%In the following, 
+as a reminder, I will briefly 
+%remind 
+restate how the data set was created.
+
+I chose six {\it event
+  keywords} to identify potential civil unrest documents: ``protest'',
+``strike'', ``march'', ``rally'', ``riot'' and ``occupy''.  I
+extracted documents from the English Gigaword corpus \cite{Gigaword}
+that contain at least one of these event keywords, or a morphological variant
+of a keyword.\footnote{I used ``marched'' and ``marching'' as
+  keywords but did not use ``march'' because it often refers to a
+  month.}
+This process extracted nearly one
+million documents, which I will refer to as the {\it event-keyword corpus}.
+% , which.  The
+% retrieved set of documents is a mix of event relevant articles and
+% irrelevant ones.
+% Ruihong -- did you do POS tagging to ensure that the words were verbs?
+% Then you matched all POS tags correspoinding to different types of verbs?
+I then randomly sampled 400 documents\footnote{These 400 documents were
+  excluded from the unannotated data used for dictionary learning.}
+from the event-keyword corpus and asked two annotators to determine
+whether each document mentioned a civil unrest event.
+I defined annotation guidelines and conducted an inter-annotator agreement
+study
+% to measure the annotators' labeling consistency 
+on 100 of these documents.  The annotators achieved a $\kappa$ score of .82.  I used
+these 100 documents as our {\it tuning set}.  Then each
+annotator annotated 150 more documents to create our {\it test set} of 300 documents.
+% which we used to measure the ability of our bootstrapped dictionaries
+% to improve event recognition performance beyond event keywords.
+
+%We report the experimental results on the {\it first part} and {\it
+%  second part} of our test set separately in the following two
+%subsections.
+\vspace{.1in}
+{\bf Terrorism Event Domain}
+\vspace{.1in}
+
+To evaluate the multi-faceted event recognition approach 
+on the terrorism event domain, I used 
+the MUC-4 data set
+\cite{muc4-proceedings}, 
+which is a standard benchmark collection 
+for evaluating event extraction systems. 
+
+The documents in this corpus describe
+%The corpus consists of 1700 documents about 
+Latin American terrorist
+events including kidnapping, arson, bombing and other attack events.
+Each document comes with associated answer key templates, a template per event. 
+%I will create the document level labels based on their 
+%coupled answer key templates.
+Specifically, I will 
+%label 
+consider a document as relevant if it has 
+one or more associated answer key templates, otherwise, 
+I will consider the document as irrelevant.  
+Roughly half of the
+documents are relevant (i.e., they mention
+at least 1 terrorist event) and the rest are irrelevant. 
+
+The MUC-4 corpus consists of 1700 documents.
+When this data set was used for event extraction evaluations, 
+researchers have split the data into training (DEV, $1300$ documents), 
+tuning (TST1+TST2, $200$ documents) and 
+test set (TST3+TST4, $200$ documents). 
+For my multi-faceted event recognition evaluation, 
+I will keep the same tuning set and test set. 
+In addition, I will ignore annotations 
+for the original training set and use the unannotated documents 
+to learn event dictionaries.
+
+\subsection{Metrics}
+The event recognition performance will be reported as Precision/Recall/F(1)-score. 
+The Precision score is the number of correctly labeled event relevant documents divided by 
+the total number of documents labeled by the event recognition system as event relevant. 
+The Recall score is the number of correctly labeled event relevant documents divided by 
+the total number of event relevant documents annotated in the data set. 
+The F(1)-score is the harmonic mean of the Precision-score and the Recall-score. 
+
+\subsection{Baselines}
+To demonstrate the effectiveness of the multi-faceted event recognition approach, 
+I will compare the recognition performance 
+%using the bootstrapped dictionaries 
+with two types of baselines. 
+First, I designed two supervised learners. Both of them are 
+classifier based (support vector
+machines (SVMs) \cite{joachims99a} with a linear kernel \cite{keerthi05}) 
+and were trained using 10-fold cross validation 
+with the test data set of each event domain. 
+The first classifier used unigrams 
+%(bag-of-words)
+as features, while the second classifier used both unigrams and
+bigrams. All the features are binary.  
+
+Event recognition can be formulated as an information retrieval (IR) problem.
+% , and IR techniques  can potentially be employed for this task.  
+As another point of comparison, I ran an
+% EMR: don't forget to add Terrier citation!
+existing IR system, Terrier \cite{Ounis:2007:8380}, on the test set. 
+Terrier
+was run with the parameter PL2 which refers to an advanced Divergence
+From Randomness weighting model \cite{amati02randomness}. In addition, Terrier used
+automatic query expansion.
+
+
+
+\section{Experimental Results for Civil Unrest Event Domain}
+
+%\subsection{Baselines}
+%big table, two sources separted, or together?
+%Ten agents seeds and four purpose pattern seeds are used in our experiments.
+
+% Table \ref{results-table} shows our evaluation results. 
+% The first section shows the results for two baselines on our test
+% set. 
+Because each article in the civil unrest test set contains 
+at least one unrest event keyword, 
+%Due to the way data was created for civil unrest event domain, 
+the first row  of Table \ref{facet-results-table} shows 
+%event recognition 
+the percentage of relevant documents in this data set, 
+which reflects the accuracy 
+%when only the 
+of event keywords alone.
+%  to extract documents from a broad-coverage text collection.  
+%All of the documents were obtained by searching for a keyword, but
+Only 101 of the 300 documents in the
+test set were labeled as relevant by the annotators (i.e., 101 describe a
+civil unrest event). This means that using only the event keywords
+to identify civil unrest documents yields about 34\% precision. In
+a second experiment, {\bf KeywordTitle}, I required the event keyword to be in
+the title (headline) of the document. The KeywordTitle 
+produced better precision (66\%), but only 33\% of the relevant
+documents had a keyword in the title.
+
+% EMR2: Put R and F back for Keyword Title...
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Method} & {\bf Recall} & {\bf Precision} & {\bf F}\\ \hline 
+
+\multicolumn{4}{|c|}{\it Keyword Accuracy} \\ \hline
+%{\bf Keyword} & {\bf 100} & 34 & 51\\
+%{\bf KeywordTitle} & 33 & 66 & 44\\ \hline
+{\bf Keyword} & - & 34 & -\\
+{\bf KeywordTitle} & 33 & 66 & 44\\ \hline
+% {\bf KeywordTitle} & - & 66 & -\\ \hline
+\multicolumn{4}{|c|}{\it Supervised Learning} \\ \hline
+{\bf Unigrams} & 62 & 66 & 64 \\
+{\bf Unigrams+Bigrams} & 55 & 71 & 62 \\ \hline
+\multicolumn{4}{|c|}{\it Bootstrapped Dictionary Lookup} \\ \hline
+%{\bf EP} & 53 & 78 & 64\\
+{\bf Event Phrases (EV)} & 60 & 79 & 69\\
+{\bf Agent Phrases (AG)} & 98 & 42 & 59\\
+{\bf Purpose Phrases (PU)} & 59 & 67 & 63\\ 
+%{\bf EP \^{} Agent} & 39 & 93 & 55\\
+%{\bf EP + AG} & 47 & 94 & 62\\
+%{\bf EP \^{} Purpose} & 15 & 100 & 26\\
+%{\bf EP + PP} & 14 & 100 & 24\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf AG + PP} & 50 & 85 & 63\\ \hline
+%{\bf All Pairs} & 65 & 83 & 73\\ \hline
+{\bf Multi-Faceted} & 71 & {\bf 88} & {\bf 79}\\ \hline
+%{\bf EP + Agent + Purpose} & 74 & 76 & 75 \\ \hline
+%\multicolumn{4}{|c|}{BOOTSTRAPPED LEXICON CLASSIFIER} \\ \hline
+%{\bf Lex} & 66 & 85 & 74 \\
+%{\bf PairLex} & 10 & 91 & 18 \\ 
+%{\bf Sets3} & 59 & 83 & 69 \\
+%{\bf PairSets3} & 68 & 84 & 75 \\
+%{\bf Set3+PairSets3} & 70 & 82 & 76 \\
+%{\bf All Sets} & 70 & 84 & 76 \\
+
+%\hline
+%%{\bf Term Freq+Pair Freq} & 60 & 78 & 68 \\ \hline
+%{\bf Term Freq+Pair Freq} & 60 & 79 & 69 \\ \hline
+%{\bf EP+Popu+Purpose} & 14 & 81 & 23 \\ 
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 68 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 67 & 64 \\
+%{\bf EP+ Popu + Purpose} & 8 & 100 & 15 \\  
+
+\end{tabular}
+\caption{Experimental Results for Civil Unrest Event Recognition}
+\label{facet-results-table}
+\end{table}
+
+% EMR2: can you please mention which SVM package was used, and also
+% what the feature values were! Binary? Frequencies? TF-IDF????
+The second section of Table \ref{facet-results-table} shows the 
+results of the two supervised classifiers.
+%based on 10-fold cross validation  
+%with our test set.  Both classifiers were trained using support vector
+%machines (SVMs) \cite{joachims99} with a linear kernel \cite{keerthi05}.
+% EMR: I don't think this citation really makes sense just to mention a linear kernel.
+% But if there's a specific reason you put it in, you can add it back.
+% \cite{keerthi05}.  
+%The first classifier used unigrams 
+%(bag-of-words)
+%as features, while the second classifier used both unigrams and
+%bigrams. All the features are binary.  
+%The evaluation results show that 
+We can see that the unigram
+classifier has an F-score of .64. Using both unigram and bigram features increased precision to
+71\% but recall fell by 7\%, yielding a slightly lower F-score of .62.
+
+
+\subsection{Event Recognition with Bootstrapped Dictionaries}
+\label{eval-cu}
+Next, I used the bootstrapped dictionaries for event recognition.
+The bootstrapping process ran for 8 iterations and then stopped
+because no more phrases could be learned. The quality of bootstrapped
+data often degrades as bootstrapping progresses, so I used the tuning
+set to evaluate the quality of the dictionaries after each iteration.  The best
+performance\footnote{Based on the performance for the {\bf Multi-Faceted}
+  approach.} on the tuning set resulted from the dictionaries 
+produced after four iterations, so I used these
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf } & {\bf Event} & {\bf Agent} & {\bf Purpose}\\ 
+{\bf } & {\bf Phrases} & {\bf Terms} & {\bf Phrases}\\ \hline 
+{\bf Iter \#1} & 145 & 67 & 124 \\
+{\bf Iter \#2} & 410 & 106 & 356 \\
+{\bf Iter \#3} & 504 & 130 & 402 \\ 
+{\bf Iter \#4} & 623 & 139 & 569 \\ \hline
+%{\bf Iter \#5} & 746 & 149 & 747 \\
+%{\bf Iter \#6} & 792 & 158 & 832 \\
+%{\bf Iter \#7} & 821 & 162 & 855 \\
+%{\bf Iter \#8} & 822 & 162 & 858 \\ \hline
+\end{tabular}
+\caption{Civil Unrest Dictionary Sizes after Bootstrapping}
+\label{size-iter}
+\end{table}
+
+dictionaries for the experiments.  
+Table \ref{size-iter} shows the number of event phrases, agents and
+purpose phrases learned after each iteration.  All three lexicons were
+significantly enriched after each iteration.
+%Many agent terms were learned in the first three iterations of bootstrapping.
+%Event phrases and purpose phrases were significantly enriched after each iteration.
+%To get a flavor of what have been learned, 
+The final
+bootstrapped dictionaries contain {\it 623} event phrases, {\it 569}
+purpose phrases and {\it 139} agent terms.
+%Table \ref{size-iter} shows the number of event phrases, agents and
+%purpose phrases 
+%of the final bootstrapped dictionaries.
+%Overall, several hundred event phrases and purpose phrases were learned. 
+%In addition, over one hundred agent terms were learned.
+%All three lexicons were
+%significantly enriched after each iteration.
+%Many agent terms were learned in the first three iterations of bootstrapping.
+%Event phrases and purpose phrases were significantly enriched after each iteration.
+%To get a flavor of what have been learned, 
+%The final
+%bootstrapped dictionaries contain {\it 623} event phrases, {\it 569}
+%purpose phrases and {\it 139} agent terms.  
+By examining them manually, the learned phrases are highly diverse. 
+Table \ref{sample-table} shows samples from each event dictionary.
+Appendix \ref{Appendix:FacetPhraseForCU} gives more complete lists of 
+the learned 
+event phrases and facet phrases.
+%In total, more than () event phrases, () agents and () purpose phrases were learned when the bootstrapping process stoped.
+%Especially, each lexicon was enlarged greatly in each of the first three iterations. 
+%In the fourth and fifth iterations, about 40 additional event phrases and purpose phrases were learned.
+
+% \begin{table}[htbp]
+% \small
+% \centering
+% \begin{tabular}[center]{|c|c|} \hline
+% %{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+% %|>{\small}c|>{\small}c|}  \hline
+% {\bf EVs} & went on strike, took to street, chanted slogans,\\
+%           & gathered in capital, clashed with police,\\
+% % & called for strike, shouted slogans, signed petition, hit streets, marched in city, set fire \\
+%           & walked off job, staged rally, held protest,\\
+%           & burned flags, blocked roads, carried placards,\\
+%           & marched in city, formed chain, set fire, hit streets\\ \hline
+% {\bf AGs} & employees, miners, muslims, protestors, unions,\\
+%           & journalists, refugees, inmates, farmers, followers,\\
+%           & teachers, drivers, prisoners, pilots, immigrants\\ \hline
+% {\bf PUs} & accusing government, press for wages, show solidarity,\\ 
+% %& paralysing country\\
+%           & voice anger, force government, reading blood,\\ 
+%           & mark anniversary, calling for right, urging end,\\ 
+%           & call attention, celebrating withdrawal, defying ban,\\
+%           & oppose plans,  condemning act, push for hike\\ \hline
+% 
+% \end{tabular}
+% \caption{Samples of Learned Event Phrases, Agents and Purpose Phrases}
+% \label{sample-table}
+% \end{table}
+
+
+% EMR: why were some of these commented out? I put them back in
+% ... guessing it wasn't intentional?
+% EMR2: was "reading blood" REALLY learned???? That's a completely
+% meaningless phrase. If that's not a typo, can we replace it with
+% something more sensible? ;)
+\begin{table}[htbp]
+\small
+\centering
+\begin{tabular}[center]{|l|} \hline
+{\bf Event Phrases:} went on strike, took to street,\\
+chanted slogans, gathered in capital, formed chain,\\
+clashed with police, staged rally, held protest,\\
+walked off job, burned flags, set fire, hit streets,\\  
+marched in city,  blocked roads, carried placards\\ 
+\hline
+% & called for strike, shouted slogans, signed petition, hit streets, marched in city, set fire \\
+ {\bf Agent Terms:} employees, miners, muslims, unions,\\
+protestors, journalists, refugees, prisoners, immigrants,\\
+inmates, pilots, farmers, followers, teachers, drivers\\ 
+\hline
+{\bf Purpose Phrases:} accusing government, voice anger,\\
+press for wages, oppose plans, urging end, defying ban,\\
+show solidarity, mark anniversary, calling for right,\\
+condemning act, pressure government, mark death,\\
+push for hike, call attention, celebrating withdrawal\\ \hline
+
+% paralysing country, 
+\end{tabular}
+\caption{Examples of Dictionary Entries for the Civil Unrest Event Domain}
+\label{sample-table}
+\end{table}
+
+
+The third section of Table \ref{facet-results-table} shows the results when
+using the bootstrapped dictionaries for event recognition.  I used a
+simple dictionary look-up approach that searched for dictionary
+entries in each document\footnote{I also explored various ways of using the bootstrapped dictionaries as
+features for a classifier to see if a supervised learner could
+make better use of the dictionaries. 
+However, the classifiers' performance is inferior to the look-up approach.}. 
+Although the phrases were learned based on syntactic
+analysis and only head words were retained for generality, I
+wanted to match dictionary entries without requiring syntactic
+analysis of new documents. So I used an approximate matching scheme that
+required each word to appear within 5 words of the
+previous word. For example, ``held protest'' would match ``held a
+large protest'' and ``held a very large political protest''. In this way, 
+I avoid the need for syntactic analysis when using the dictionaries
+for event recognition. 
+
+% EMR: please check that the sentence above is correct, or fix it!!!
+First, I labeled a
+document as relevant if it contained any  Event Phrase (EV) in
+the dictionary. The learned event phrases achieved
+better performance than all of the baselines, yielding an F-score of
+69\%.  The best baseline was the unigram classifier, which was trained
+with supervised learning. The
+bootstrapped event phrase dictionary produced much higher precision
+(79\% vs. 66\%) with only slightly lower recall (60\% vs. 62\%), and
+did not require annotated texts for training. Statistical
+significance testing  shows that the Event Phrase lookup approach works
+significantly better than the unigram classifier ($p < 0.05$, paired
+bootstrap \cite{SigTest12}).
+
+For the sake of completeness, I also evaluated the performance of
+dictionary look-up using the bootstrapped Agent (AG) and Purpose (PU)
+dictionaries, individually. The agents terms produced 42\% precision
+with 98\% recall, demonstrating that the learned agent list has
+extremely high coverage but (unsurprisingly) does not achieve high
+precision on its own.  The purpose phrases achieved a better balance
+of recall and precision, producing an F-score of 63\%, which is
+nearly the same as the supervised unigram classifier.
+
+My original hypothesis was that a single type of event information is
+not sufficient to accurately identify event descriptions.  My goal
+was high-accuracy event recognition by requiring that a document
+contain multiple clues pertaining to different facets of an event
+({\it multi-faceted event recognition}). The last row of Table
+\ref{facet-results-table} ({\bf Multi-Faceted}) shows the results when requiring
+matches from at least two different bootstrapped
+dictionaries. Specifically, I labeled a document as relevant if it
+contained at least one phrase from each of two different dictionaries
+and these phrases occurred in the same sentence. Table
+\ref{facet-results-table} shows that multi-faceted event recognition
+achieves 88\% precision with reasonably good recall of 71\%, yielding
+an F-score of 79\%. This multi-faceted approach with simple dictionary
+look-up outperformed all of the baselines, and each dictionary used by
+itself. Statistical significance testing shows that the Multi-Faceted
+approach works significantly better than the unigram classifier ($p <
+0.001$, paired bootstrap). 
+The Multi-Faceted approach is 
+significantly 
+better than the Event Phrase (EV) lookup approach at the
+$p < 0.1$ level. 
+
+% EMR2: Oh, only P < 0.1?!  Usually people like to see p < .05.
+% Just wanted to check that 0.1 is correct and that's not a typo. 
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Method} & {\bf Recall} & {\bf Precision} & {\bf F-score}\\ \hline 
+                                                     
+%{\bf EP \^{} Agent} & 39 & 93 & 55\\
+{\bf EV + PU} & 14 & 100 & 24\\
+{\bf EV + AG} & 47 & 94 & 62\\
+%{\bf EP \^{} Purpose} & 15 & 100 & 26\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+{\bf AG + PU} & 50 & 85 & 63\\ \hline
+%{\bf All Pairs} & 65 & 83 & 73\\ \hline
+{\bf Multi-Faceted} & 71 & 88 & 79\\ \hline
+%{\bf EP + Agent + Purpose} & 74 & 76 & 75 \\ \hline
+%%{\bf Term Freq+Pair Freq} & 60 & 78 & 68 \\ \hline
+%{\bf Term Freq+Pair Freq} & 60 & 79 & 69 \\ \hline
+%{\bf EP+Popu+Purpose} & 14 & 81 & 23 \\ 
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 68 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 67 & 64 \\
+%{\bf EP+ Popu + Purpose} & 8 & 100 & 15 \\  
+
+\end{tabular}
+\caption{Analysis of Dictionary Combinations}
+\label{ablation-table}
+\end{table}
+Table \ref{ablation-table} takes a closer look at how each pair of dictionaries performed. 
+%Next, we evaluate the event recognition results where we require an article to 
+%contain both an event phrase and an agent/purpose phrase or 
+%both an agent and a purpose phrase in one sentence. 
+% The first three rows show that 
+% the event recognition precision all increased compared with the evaluation results 
+% where only one individual lexicon term was required to appear in text (shown in the third section of Table \ref{results-table}).
+The first row shows that requiring a document to have an event phrase
+and a purpose phrase produces the best precision (100\%) but with low
+recall (14\%). The second row reveals that requiring a document to
+have an event phrase and an agent term yields  better
+recall (47\%) and high precision (94\%). The third row shows
+that requiring a document to have a purpose phrase and an agent term
+produces the best recall (50\%) but with slightly lower precision
+(85\%). 
+% However, 85\% precision is still quite good and much higher than all of the baselines. 
+% These result shows that requiring the
+% presence of an agent term and a purpose phrase, even when a document
+% contains only a general event keyword\footnote{Remember that the event
+%   keywords alone yield only 34\% precision.}, greatly improves the
+% accuracy of event recognition.  
+Finally, the last row of Table
+\ref{ablation-table} shows that taking the union of these results
+(i.e., any combination of dictionary pairs is sufficient) yields the best recall
+(71\%) with high precision (88\%), demonstrating that we get the best coverage
+by recognizing multiple combinations of event information.
+
+
+
+%Table \ref{results-iter-test} shows 
+%the effects of the bootstrapping accumulative results of
+%the performance of {\bf All Pairs} evaluated using the lexicon learned after each bootstrapping iteration.
+%the effects of the bootstrapping process to the performance of the lexicon lookup approach using {\bf All Pairs}. 
+%lexicon lookup learned after each of the first four boostrapping iterations.
+%All results are based on the lookup of all pairwise combinations of
+%event phrases and two types of event characteristics.  
+%The first row
+%shows the results 
+%where only 10 agent seeds and 4 purpose patterns
+%shown in Table \ref{seed-table} was paired up for lookup in text.
+%using only 10 agent seeds and 4 purpose seeds
+%as shown in Table \ref{seed-table}.
+%The following four rows in the table show 
+%the performance of {\bf All Pairs} using the lexicon learned after each bootstrapping iteration. 
+%We can see that
+%our boostrapping system ran for 5 iterations, 
+%the recall of the lexicon lookup approach increased steadily and 
+%the precision was maintained almost the same after each iteration.
+%Specifically, significant recall gains were observed after the first two iterations and the following two iterations also increased recall clearly.
+%After the first three iterations, the performance stayed exactly the same. 
+%However, more event phrases, purpose phrases and agents learned in tha last 2 iterations
+%Therefore, we can infer that the event phrases, purpose phrases and agents learned in tha last 2 iterations were not matched in our test set of articles.
+
+
+
+% NOTE: don't use the word "significant" unless you are referring to
+% stat sig testing!
+
+
+
+%this yields a better recall of .69 and a reletively high precision of .81, and the F-score is 75.
+
+
+% EMR: you should indicate how many points you generate R/P numbers for -- after each 10 docs? 20 docs?
+% I took a guess at what you did, but am not sure...
+% EMR: What were the query terms given to Terrier???
+
+\subsection{Comparisions with an Existing Information Retrieval System}
+
+%Event recognition can be formulated as an information retrieval (IR) problem.
+% , and IR techniques  can potentially be employed for this task.  
+%As another point of comparison, I ran an
+% EMR: don't forget to add Terrier citation!
+%existing IR system, Terrier \cite{Ounis:2007:8380}, on the test set. 
+% Practically, we should apply Terrier to all the documents with an
+% event keyword where the 300 annotated documents were sampled from, but
+% because we lack gold labels on them, thus, the evaluation will be
+% impossible in that way.  
+% EMR2: did you give one query with ALL of the keywords, or N queries
+% (one for each of N keywords)?
+I used the Terrier information retrieval system to rank these 300 documents given my set of event keywords 
+as the query \footnote{I gave Terrier one query with all of the event keywords.}, 
+and then generated a
+recall/precision curve (Figure \ref{IR-curve}) 
+%by computing the recall and precision of the
+%top-ranked $k$ documents, with $k$ ranging from 10 to 300 in
+%increments of 10. 
+by computing the precisions at different levels of recall,
+ranging from 0 to 1 in increments of {\it .10}.  
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/IR_curve_4.eps}
+ \caption{Comparison with the Terrier IR system, Civil Unret Events}
+\label{IR-curve}
+\end{figure} 
+%Terrier
+%was run with the parameter PL2 which refers to an advanced Divergence
+%From Randomness weighting model \cite{amati02randomness}. In addition, Terrier used
+%automatic query expansion.  
+%Figure \ref{IR-curve} shows the
+%recall/precision curve for Terrier.   
+We can see that Terrier
+identified the first 60 documents (20\% recall) with 100\%
+precision.  But precision dropped sharply after that.  The circle in
+Figure \ref{IR-curve} shows the performance of my bootstrapped
+dictionaries using the {\bf Multi-Faceted} approach.
+At a comparable level of recall (71\%), 
+the multi-faceted approach using the bootstrapped
+dictionaries yielded improvement of 34\% in precision (88\% vs. 54\%). 
+%In addition, at comparable level of precision (88\%), 
+%Terrier achieved about 45\% recall versus 71\% recall produced with the bootstrapped
+%dictionaries.
+
+
+
+%IR results too
+
+
+%\begin{table}[ht]
+%\small
+%\centering
+%\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+%{\bf All Pairs} & {\bf Recall} & {\bf Precision} & {\bf F-score}\\ \hline 
+%{\bf Iter \#1} & 52 & 70 & 60 \\
+%{\bf Iter \#2} & 78 & 71 & 74 \\
+%{\bf Iter \#3} & 79 & 63 & 70 \\ \hline
+%{\bf Seeds} & 4 & 50 & 8 \\
+%{\bf Iter \#1} & 25 & 78 & 38 \\
+%{\bf Iter \#2} & 50 & 89 & 64 \\
+%{\bf Iter \#3} & 54 & 79 & 64 \\ 
+%{\bf Iter \#4\-8} & 61 & 81 & 69 \\ 
+%\hline
+%{\bf Iter \#5} & 69 & 81 & 75 \\ \hline
+%\end{tabular}
+%\caption{Bootstrapped lexicon lookup results in different numbers of iterations, on tuning set}
+%\label{results-iter-test}
+%\end{table}
+
+
+
+%Table \ref{results-iter-test} shows the evaluation results of
+%lexicons learned after each of the first four boostrapping iterations.
+%All results are based on the lookup of all pairwise combinations of
+%event phrases and two types of event characteristics.  The first row
+%shows the results where only 10 agent seeds and 4 purpose patterns
+%shown in Table \ref{seed-table} was paired up for lookup in text.
+%The following four rows in the table tell us that
+%%our boostrapping system ran for 5 iterations, 
+%the recall of lexicon lookup results increased steadily and 
+%the precision was maintained almost the same after each iteration.
+%Huge recall gains are observed after the first two iterations and the following two iterations also increased recall significantly.
+%%After the first three iterations, the performance stayed exactly the same. 
+%%However, more event phrases, purpose phrases and agents learned in tha last 2 iterations
+%%Therefore, we can infer that the event phrases, purpose phrases and agents learned in tha last 2 iterations were not matched in our test set of articles.
+
+
+\subsection{Finding Articles with no Event Keyword}
+%We also evaluated whether our learned dictionaries can help to identify
+%documents that describe a civil unrest event but do not contain any of the 
+%event keywords used in the first set of experiments.  
+%% These documents are simply
+%% overlooked if we rely on event keyword searching for event
+%% recognition.  
+%Based on the ablation results shown in Table
+%We hypothesize that it will be sufficient to claim a
+%text is describing a relevant event if it contains an event expression
+%and an event characteristic or two pieces of event characteristic
+%information, and we retrived documents from Gigaword that contain none
+%of the event keywords but contain terms from two of the three learned
+%lexicon lists in one sentence\footnote{There are three combinations,
+%  therefore, we retrieved documents where one sentence contains both
+%  an event expression and an event characteristic, an agent or a
+%  purpose phrase or two event characteristics, an agent together with
+%  a purpose phrase.}.  Then we randomly selected 50 documents from the
+%retrieved documents satisfying each condition and asked our annotators
+%to label whether each of the documents contains a civil unrest event
+%or not.  Furthermore, if a text contains an event expression and two
+%piece of event characteristic information, then we should be even more
+%certain that this text is describing a relevant event.  Therefore, we
+%also randomly selected 50 documents from all the documents which
+%contain an event expression, an agent as well as a purpose phrase and
+%had them annotated.  In total, 200 documents were annotated as the
+%{\it second part} of our test set.
+%The learned event phrases, agents and purpose phrases also help to find event relevant articles which contain none of the identified event keywords.
+
+The learned event dictionaries have the potential to recognize
+event-relevant documents that do not contain any human-selected event
+keywords. This can happen in two ways. First, {\it 378} of the {\it
+  623} learned event phrases do not contain any of the original event
+keywords. Second, some event descriptions will contain
+a known agent and purpose phrase, but the event
+phrase will be unfamiliar.
+
+% % The evaluation results
+% %in the first part 
+% where the testing documents do contain an identified event keyword
+% show that better precision can be achieved if we require to see two
+% event clues in one sentence instead of one event clue alone.  In
+% addition, requiring to see all three event clues occuring in the same
+% sentence will potentially find event relevant articles with better
+% accuracy.
+%Based on the above analysis, 
+
+I performed an additional set of experiments with documents in the
+Gigaword corpus that contain no human-selected civil unrest keywords.
+Following the multi-faceted approach to event recognition, I collected all documents that 
+contain a sentence that matches phrases in at least two of my bootstrapped event dictionaries.
+This process retrieved 178,197 documents. 
+%which have a sentence where two or three pieces of event information were matched.
+The Total column of Table \ref{results-table-nokey} shows the number
+of documents that contained phrases found in two different dictionaries
+(EV+AG, EV+PU, AG+PU) or 
+%phrases found in all three of our dictionaries (EV+AG+PU).
+in all three dictionaries (EV+AG+PU).
+%%% ***** IMPORTANT *****: somewhere we need to state that we match
+%%% ***** these phrases with the sliding window approach!!!
+%In total, over () documents in Gigaword have a sentence containing an event phrase, an agent and a purpose phrase 
+%and over (), (), () documents in Gigaword include a sentence containing an event phrase
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf }  & {\bf Total} & {\bf Samples} & {\bf Accuracy}\\ \hline 
+{\bf EV+AG}  & 67,796 & 50 & 44\% \\
+{\bf EV+PU}  & 2,375 & 50 & 54\% \\
+{\bf AG+PU} & 101,173  & 50 & 18\% \\
+{\bf EV+AG+PU} & 6,853 & 50 & {\bf 74\%} \\ \hline
+\end{tabular}
+\caption{Evaluation of articles with no event keyword}
+\label{results-table-nokey}
+\end{table}
+%In total, more than half a million documents were retrieved from Gigaword which include a sentence where two or three pieces of event information were matched.
+%The numbers of documents satisfying each retrieval condition are shown in the first column of Table \ref{results-table-nokey}.
+% To estimate the ratio of the documents which are truely event relevant in all the returned documents, 
+
+I randomly sampled 50 documents from  each category 
+%satisfying each condition 
+and had them annotated.
+% \footnote{50 documents is a reletively small sampling, however, annotating more documents becomes too costly.}.  
+%The second column of Table \ref{results-table-nokey} shows the number of samples selected from each category of retrieved documents. 
+% Based on the annotations, we calculated the accuracies as the number of documents annotated as event relevant divided by {\it 50} (the size of four samplings).
+The accuracies are shown in the Accuracy column. 
+% of Table
+%\ref{results-table-nokey}.  
+Finding all three types of phrases produced the best accuracy, 74\%. Furthermore, I
+found over 6,800 documents that had all three types of event
+information using our learned dictionaries, but no event keywords. 
+This result demonstrates
+that the bootstrapped dictionaries can recognize many event
+descriptions that would have been missed by searching only with
+manually selected keywords. This experiment also confirms that multi-facted event
+recognition using all three learned dictionaries achieves good
+accuracy even for documents that do not contain the civil unrest keywords, 
+although matching all facets is necessary to achieve good precision. 
+
+
+\section{Experimental Results for Terrorism Event Domain}
+
+I evaluated the bootstrapped terrorism event dictionaries 
+on the test set (TST3 + TST4 sections) of the MUC-4 corpus.
+%, which includes 
+%{\it 200} documents. 
+%Compared to the civil unrest evaluation data set, where 
+%only about one third of the documents actually mention the ratio 
+%of relevant documents in MUC-4 test set is higher. 
+Out of the {\it 200} documents, {\it 126} articles mention 
+one or more terrorism events. 
+Therefore, if we label all the documents as 
+event relevant, the precision is only {\it 63\%} (
+as shown in the first row of Table \ref{facet-results-table-terrorism} ). 
+
+The second section of Table \ref{facet-results-table-terrorism} 
+shows the performance of the two supervised baselines. 
+We can see that the unigram classifier 
+yields a high recall of .86 and a reasonable precision of .76. 
+Using both unigrams and bigrams as features, the supervised 
+classifier further increases the recall to .91, but 
+with a small loss of precision. 
+
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Method} & {\bf Recall} & {\bf Precision} & {\bf F}\\ \hline 
+%\multicolumn{4}{|c|}{\it Labeling all as Relevant} \\ \hline
+%& 100 & 63 &  \\ \hline
+%\multicolumn{4}{|c|}{\it Keyword Accuracy} \\ \hline
+%{\bf Keyword} & {\bf 100} & 34 & 51\\
+%{\bf KeywordTitle} & 33 & 66 & 44\\ \hline
+%{\bf Keyword} & - & 34 & -\\
+%{\bf KeywordTitle} & 33 & 66 & 44\\ \hline
+% {\bf KeywordTitle} & - & 66 & -\\ \hline
+{\bf Brute-force} & - & 63 & - \\ \hline
+\multicolumn{4}{|c|}{\it Supervised Learning} \\ \hline
+{\bf Unigrams} & 86 & 76 & {\bf 81} \\
+{\bf Unigrams+Bigrams} & 91 & 72 & 80 \\ \hline
+\multicolumn{4}{|c|}{\it Bootstrapped Dictionary Lookup} \\ \hline
+%{\bf EP} & 53 & 78 & 64\\
+{\bf Event Phrases (EV)} & 19 & 65 & 29\\
+{\bf Agent Phrases (AG)} & {\bf 99} & 63 & 77\\
+{\bf Patient Phrases (PA)} & 94 & 64 & 76\\
+{\bf Effect Phrases (EF)} & 94 & 68 & 79\\ 
+%{\bf EP \^{} Agent} & 39 & 93 & 55\\
+%{\bf EP + AG} & 47 & 94 & 62\\
+%{\bf EP \^{} Purpose} & 15 & 100 & 26\\
+%{\bf EP + PP} & 14 & 100 & 24\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf AG + PP} & 50 & 85 & 63\\ \hline
+%{\bf All Pairs} & 65 & 83 & 73\\ \hline
+{\bf Multi-Faceted} & 55 & {\bf 80} & 65\\ \hline
+%{\bf EP + Agent + Purpose} & 74 & 76 & 75 \\ \hline
+%\multicolumn{4}{|c|}{BOOTSTRAPPED LEXICON CLASSIFIER} \\ \hline
+%{\bf Lex} & 66 & 85 & 74 \\
+%{\bf PairLex} & 10 & 91 & 18 \\ 
+%{\bf Sets3} & 59 & 83 & 69 \\
+%{\bf PairSets3} & 68 & 84 & 75 \\
+%{\bf Set3+PairSets3} & 70 & 82 & 76 \\
+%{\bf All Sets} & 70 & 84 & 76 \\
+%\hline
+%%{\bf Term Freq+Pair Freq} & 60 & 78 & 68 \\ \hline
+%{\bf Term Freq+Pair Freq} & 60 & 79 & 69 \\ \hline
+%{\bf EP+Popu+Purpose} & 14 & 81 & 23 \\ 
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 68 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 67 & 64 \\
+%{\bf EP+ Popu + Purpose} & 8 & 100 & 15 \\  
+\end{tabular}
+\caption{Experimental Results for Terrorism Event Recognition}
+\label{facet-results-table-terrorism}
+\end{table}
+
+\subsection{Event Recognition with Bootstrapped Dictionaries}
+
+To learn event dictionaries for the terrorism event domain, 
+the bootstrapping process ran for 4 iterations and then 
+stopped because no more phrases could be learned. 
+Table \ref{size-iter-terrorism} shows the number of 
+event phrases, agents, patients and effect phrases 
+learned after each iteration. 
+Most event phrases and agents were learned from the first 
+bootstrapping iteration while the number of patient and effect phrases 
+%were 
+gradually 
+%acquired 
+increased. 
+%along with four iterations.
+The final
+bootstrapped dictionaries contain {\it 124} event phrases, {\it 25}
+agent terms, {\it 30} patient terms and {\it 46} effect phrases. 
+Similar to the previous civil unrest event domain, 
+phrases in the learned terrorism event dictionaries are highly diverse too. 
+Table \ref{sample-table-terrorism} shows samples from each event dictionary.
+Appendix \ref{Appendix:FacetPhraseForTer} gives more complete lists of 
+the learned event phrases and facet phrases.
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lcccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf } & {\bf Event} & {\bf Agent} & {\bf Patient} & {\bf Effect}\\ 
+{\bf } & {\bf Phrases} & {\bf Terms} & {\bf Terms} & {\bf Phrases}\\ \hline 
+{\bf Iter \#1} & 123 & 25 & 10 & 30 \\
+{\bf Iter \#2} & 123 & 25 & 28 & 38 \\
+{\bf Iter \#3} & 124 & 25 & 30 & 44 \\ 
+{\bf Iter \#4} & 124 & 25 & 30 & 46 \\ \hline
+%{\bf Iter \#5} & 746 & 149 & 747 \\
+%{\bf Iter \#6} & 792 & 158 & 832 \\
+%{\bf Iter \#7} & 821 & 162 & 855 \\
+%{\bf Iter \#8} & 822 & 162 & 858 \\ \hline
+\end{tabular}
+\caption{Dictionary Sizes after Bootstrapping}
+\label{size-iter-terrorism}
+\end{table}
+
+\begin{table}[htbp]
+\small
+\centering
+\begin{tabular}[center]{|l|} \hline
+{\bf Event Phrases:} claimed responsibility, hit houses,\\
+burned trucks, blew up bus, set off bomb, holding hostages,\\
+killed citizens, threatened investigators, entered residence\\
+sabotaged tower, machinegunned residence, detonated charge,\\  
+carry out attacks, attacked studios, massacred women\\ 
+\hline
+% & called for strike, shouted slogans, signed petition, hit streets, marched in city, set fire \\
+ {\bf Agent Terms:} mob, ESA, group, individual,\\
+commandos, Tegucigalpa, Santiago, organizations,\\
+groups, organization, forces, Willka\\ 
+\hline
+ {\bf Patient Terms:} headquarters, citizens, officer,\\
+leaders, neighborhood, reporters, airplanes, population,\\
+Ellacuria, leader, home, buildings, office\\ 
+\hline
+{\bf Effect Phrases:} wounded {\it *}, {\it *} be destroyed, death of {\it *},\\
+broke into {\it *}, killing of {\it *}, bodies of {\it *}, {\it *} be kidnapped,\\
+{\it *} be assassinated, enter {\it *}, set fire to {\it *}, {\it *} be wounded,\\
+causing damage to {\it *}, {\it *} be shot, massacre of {\it *}, {\it *} be detained\\
+\hline
+
+% paralysing country, 
+\end{tabular}
+\caption{Examples of Dictionary Entries for the Terrorism Event Domain}
+\label{sample-table-terrorism}
+\end{table}
+
+The third section of Table \ref{facet-results-table-terrorism} 
+shows the experimental results when using the bootstrapped dictionaries 
+for event recognition. 
+The same with experiments for civil unrest event domain, 
+I used the
+simple dictionary look-up approach that searched for dictionary
+entries in each document. 
+Furthermore, I used the same approximate matching scheme as discussed 
+%previously. 
+in Section \ref{eval-cu}.
+%We can see that by searching for event phrases 
+
+The first four rows of the bottom section of 
+Table \ref{facet-results-table-terrorism} show the results of event recognition 
+where 
+%I claimed 
+a document is labeled as relevant if it contains at least 
+one event phrase (the first row) or at least one facet phrase 
+(the following three rows). 
+We can see that requiring matching with only one type of event information 
+gives mediocre precision. 
+%While dictionary look-up based on facet phrases 
+%As to the recall perspective, 
+Interestingly, while matching with each type of facet phrase 
+consistently yields high recall, matching only with event phrases 
+recoghnizes only 19\% of the relevant documents. 
+This can be partially attributed to the strict syntactic forms 
+as required  for event phrases, but in the meantime, it 
+also reflects the fact that terrorism event descriptions are of high diversity and 
+using event phrases alone can only identify 
+a small fraction of relevant documents.
+
+The last row shows the results of my {\bf Multi-faceted} approach. 
+By {\bf Multi-faceted}, I require a document to contain 
+an event phrase together with two event facet phrases of distinct types, 
+or three facet phrases of distinct types. 
+Furthermore, consistent with the assumption used in the learning process 
+that multiple pieces of event information should co-occur 
+in a localized text region, 
+the matched phrases should be appear in a text segment that spans over  
+at most four sentences.
+We can see that my {\bf Multi-faceted} approach achieves the best 
+precision .80, which is higher than matching with an individual type of 
+event information and higher than both supervised baselines.
+However, for the terrorism domain, the {\bf Multi-faceted} approach 
+only yields limited recall .55 and about half of the relevant documents 
+are missed. One main reason for the low recall of 
+my {\bf Multi-faceted} approach is 
+that the event dictionary learning process only used a limited 
+amount of unannotated documents, 1300 documents (MUC-4 DEV) specifically, 
+which is a much smaller collection compared to the 
+Gigaword corpus used for civil unrest event dictionary learning. 
+%that the bootstrapping learning 
+%algorithm that for terrorism domain, 
+
+
+
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Method} & {\bf Recall} & {\bf Precision} & {\bf F-score}\\ \hline 
+                                                     
+%{\bf EP \^{} Agent} & 39 & 93 & 55\\
+{\bf EV + PA + EF} & 06 & {\bf 88} & 10\\
+{\bf EV + AG + PA} & 17 & 70 & 27\\
+{\bf EV + AG + EF} & 15 & 70 & 25\\
+%{\bf EP \^{} Purpose} & 15 & 100 & 26\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+%{\bf Agent \^{} Purpose} & 50 & 81 & 61\\
+{\bf AG + PA + EF} & 46 & 85 & 60\\ \hline
+%{\bf All Pairs} & 65 & 83 & 73\\ \hline
+{\bf Multi-Faceted} & {\bf 55} & 80 & {\bf 65}\\ \hline
+%{\bf EP + Agent + Purpose} & 74 & 76 & 75 \\ \hline
+%%{\bf Term Freq+Pair Freq} & 60 & 78 & 68 \\ \hline
+%{\bf Term Freq+Pair Freq} & 60 & 79 & 69 \\ \hline
+%{\bf EP+Popu+Purpose} & 14 & 81 & 23 \\ 
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\
+%{\bf Unigrams+Term Freq} & 61 & 67 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 68 & 64 \\ \hline
+%{\bf Unigrams+Term Freq+Pair Freq} & 61 & 67 & 64 \\
+%{\bf EP+ Popu + Purpose} & 8 & 100 & 15 \\  
+
+\end{tabular}
+\caption{Analysis of Dictionary Combinations}
+\label{ablation-table-terrorism}
+\end{table}
+
+Table \ref{ablation-table-terrorism} takes 
+a closer look at how each combination of event dictionaries performed. 
+Compared to searching for only one piece of event information in a document, 
+each combination of the {\bf Multi-faceted} approach yields 
+higher precision.
+One interesting observation is that out of the four combinations, 
+the first and fourth combinations, which 
+used both patient and effect dictionaries, 
+achieve the best precisions. 
+This confirms that characteristic patients together with the 
+effects of patients provide useful indicators when identifying terrorism events. 
+
+\subsection{Comparisions with an Existing Information Retrieval System}
+
+\begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/faceted/IR_curve_terrorism.eps}
+ \caption{Comparison with the Terrier IR system, Terrorism Events}
+\label{IR-curve-terrorism}
+\end{figure} 
+
+I used the Terrier information retrieval system to 
+rank the 200 documents in the test set, given a set of event keywords 
+as the query \footnote{The event keywords are chosen based on the  
+terrorism event subtypes as annotated in MUC-4 answer keys, and I included 
+keywords for all four subtypes and their syntactic 
+variations. They are: attacked, attack, attacks, bombed, 
+bomb, bombs, bombing, kidnapped, kidnap, kidnapping, and arson.
+I gave Terrier one query with all of the event keywords.}, 
+and then generated a
+recall/precision curve (Figure \ref{IR-curve-terrorism}) 
+%by computing the recall and precision of the
+%top-ranked $k$ documents, with $k$ ranging from 10 to 300 in
+%increments of 10. 
+by computing the precisions at different levels of recall,
+ranging from 0 to 1 in increments of {\it .10}. 
+With the given query, Terrier can only retrieve about 
+80 percent of the relevant documents. 
+The circle in Figure \ref{IR-curve-terrorism} 
+shows the performance of my bootstrapped dictionaries using the 
+{\bf Multi-Faceted} approach. 
+We can see that at a comparable level of recall (55\%), 
+the multi-faceted approach using my bootstrapped dictionaries 
+yielded about a 10 percent improvement in precision (80\% v.s. 71\%). 
+
+
+
+\section{The Effects of Multi-faceted Event Recognition on Event Extraction}
+\label{Chapter:Stratified}
+One strong motivation of proposing multi-faceted event recognition is 
+to make event extraction systems more accurate by only applying 
+the extraction systems to 
+documents that actually contain relevant event descriptions,  
+as identified by the multi-faceted event recognition approach. 
+In this section, I will show event extraction results when 
+applying my multi-faceted event recognition 
+on top of my best discourse-guided event extraction architecture {\it LINKER}.
+Please refer to Chapter \ref{Chapter:LINKER} for details on the design of {\it LINKER}. 
+The expectation is that the precision of event extraction 
+will be improved after the multi-faceted event recognition 
+approach filters out documents that do not mention a relevant event.
+
+\begin{table}[t]
+\footnotesize
+\centering
+\begin{tabular}[center]{|l|cccc|c|} \hline
+{\bf System} & {\bf Agent} & {\bf Site} & {\bf Location} & {\bf Instrument}  & {\bf Average} \\ \hline
+%\multicolumn{6}{|c|}{Local Extraction Only} \\ \hline
+{\bf LINKER} & 58/41/48 & 43/27/33 & 41/33/36 & 64/61/63 & 51/40/45\\ \hline
+{\bf +Multi-faceted} & 65/34/45 & 54/23/32 & 55/29/37 & 68/61/65 & 60/37/46\\ \hline
+\multicolumn{6}{|c|}{with Perfect Document Classifier} \\ \hline
+{\bf +PerfectDoc} & 65/41/50 & 54/27/36 & 54/33/41 & 69/61/65 & 61/40/48 \\ \hline
+\end{tabular}
+\caption{Experimental Results for the Civil Unrest Domain, Reported as
+  Precision/Recall/F-score.}
+\label{results-table-linker-cu-filtered}
+\end{table} 
+
+Tables \ref{results-table-linker-cu-filtered} and 
+\ref{results-table-linker-filtered} show the extraction results for 
+the civil unrest event domain and the terrorism event domain, respectively. 
+The first row of 
+Table \ref{results-table-linker-cu-filtered} 
+shows the results of {\it LINKER} 
+when it was applied to every document of the civil unrest test set, 
+showing the extraction results for each event role separately and their macro average performance. 
+These results are the same as the results of the full {\it LINKER} system 
+%that we have seen 
+in Table \ref{results-table-linker-cu}. 
+Please refer to the evaluation sections of Chapter \ref{Chapter:LINKER} 
+for details on experimental settings.
+The second row of Table \ref{results-table-linker-cu-filtered} shows the results 
+of {\it LINKER} when it was only applied to the relevant documents as identified 
+by my multi-faceted approach. 
+We can see that the extraction precisions are improved across all four event roles. 
+%Overall, 
+On average, the precision increases by 9 points with only 3 points of recall loss. 
+Due to the 
+%significant 
+substantial precision improvement, the F-score is also slightly increased. 
+
+%Even though 
+After the document level filtering using the multi-faceted event recognition approach, 
+the precision of the event extraction system {\it LINKER} is still relatively low (only 60\%).
+Therefore, to demonstrate the limit of precision gain by doing event recognition, 
+I showed the extraction results 
+(in the last row of Table \ref{results-table-linker-cu-filtered}) when 
+a perfect document classifier is applied on top of the extraction system.
+By the perfect document classifier, I will simply apply {\it LINKER} 
+only to the gold standard relevant documents in the test set. 
+We can see that, with perfect event recognition, the extraction recall 
+will be the same as applying the extraction system to each document in the test set. 
+The precision was improved by only one further point, compared to the setting where 
+my multi-faceted  approach was employed.
+%to perform event recognition.
+
+
+\begin{table}[t]
+\footnotesize
+\centering
+\begin{tabular}[center]{|l|ccccc|c|} \hline
+{\bf System} & {\bf PerpInd} & {\bf PerpOrg} & {\bf Target} & {\bf Victim} &
+{\bf Weapon}  & {\bf Average} \\ \hline
+{\bf LINKER} & 54/57/56 & 55/49/51 & 55/68/61 & 63/59/61 & 62/64/63 & 58/60/59 \\ \hline
+{\bf +Multi-faceted} & 62/42/50 & 56/42/48 & 51/42/46 & 63/45/52 & 56/36/43 & 59/42/49 \\ \hline
+\multicolumn{7}{|c|}{with Perfect Document Classifier} \\ \hline
+{\bf +PerfectDoc} & 64/57/61 & 57/49/53 & 60/68/64 & 68/59/63 & 65/64/64 & 64/60/62 \\ \hline %61.6
+\end{tabular}
+\caption{Experimental Results for Terrorism Domain, Reported as
+  Precision/Recall/F-score.}
+\label{results-table-linker-filtered}
+\end{table}
+
+
+Table \ref{results-table-linker-filtered} 
+shows the event extraction results for the terrorism domain.
+The first row shows the results of {\it LINKER} 
+when it was applied to every document of the terrorism test set. 
+These results are the same as shown in Table \ref{results-table-linker}.
+Please refer to 
+%the appropriate evaluation sections of Chapter \ref{Chapter:LINKER}
+Section \ref{chap4:linker-muc} 
+for details on experimental settings. 
+The second row of Table \ref{results-table-linker-filtered} 
+shows the extraction results of {\it LINKER} 
+when it was only applied to the relevant documents 
+%as 
+identified 
+by my multi-faceted event recognition approach. 
+For the terrorism domain, we 
+%can also 
+see only a slight improvement of precision 
+after applying the document level filter. 
+However, 
+%due to the imperfect recall yielded by the multi-faceted approach on this domain, 
+the extraction recall was 
+%also 
+substantially reduced.
+Similar to the 
+last 
+previous table, the last row of Table \ref{results-table-linker-filtered} 
+also shows {\it LINKER}'s extraction results when 
+the perfect document classifier is applied on top of the extraction system.
+We can see that with perfect event recognition, the extraction precision 
+increased to just .64 for the terrorism domain.
+
+Another benefit of applying event recognition before actually diving into 
+documents for event extraction is that amount of computing resources will be 
+saved. Specifically, for the civil unrest event domain, 
+only {\it 83} documents were processed by the event extraction system, 
+compared to {\it 300} documents in the original test set. 
+Similarly for the terrorism event domain, only {\it 85} documents 
+needs to be processed by the event extraction system,
+instead of {\it 200} documents as included in its full test set.
+Considering the costly text analysis components that are used in event extraction systems, 
+event recognition will 
+%boosts 
+increase the throughtput rate of event extraction systems in practice.
+
+
+
+\section{Conclusions}
+
+In this chapter, I presented my multi-faceted event recognition approach that 
+can accurately recognize 
+event descriptions of a particular type in text by identifying event
+expressions as well as event defining characteristics of the event. 
+I also presented a bootstrapping framework to 
+automatically learn event expressions as well as essential facets of events, 
+which only requires limited human supervision.  
+Experimental results show that the multi-faceted event recognition approach 
+can effectively identify documents that describe a certain type of event and 
+make event extraction systems more precise. 

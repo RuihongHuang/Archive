@@ -1,0 +1,1656 @@
+\chapter{{\it TIER}: a Multi-layered Discourse-Guided Event Extraction Architecture}
+\label{Chapter:TIER}
+As explained in Chapter \ref{Chapter:Introduction}, the goal of event extraction systems is to identify 
+entities and objects (mainly noun phrases) that perform key roles 
+in events. 
+Most current event extraction systems 
+heavily rely on local context
+when making extraction decisions. 
+%the following 
+%two aspects. 
+For example, a system that extracts information
+ about murders will recognize expressions associated with murder
+ (e.g., ``killed'', ``assassinated'', or ``shot to death'') and
+ extract role fillers from the surrounding context. 
+Therefore, most current event extraction systems generally tackle event recognition and role
+ filler extraction at the same time and primarily recognize contexts that explicitly refer
+ to a relevant event.
+ 
+However, lacking the view of wider context limits the 
+%performance 
+coverage of traditional event extraction systems 
+%in terms of both extraction coverage and accuracy.
+because many role
+ fillers occur in contexts that do not explicitly mention the event,
+ and those fillers are often overlooked. 
+For example, the perpetrator
+ of a murder may be mentioned in the context of an arrest, an
+ eyewitness report, or speculation about possible suspects. Victims
+ may be named in sentences that discuss the aftermath of the event,
+ such as the identification of bodies, transportation of the injured
+ to a hospital, or conclusions drawn from an investigation.  I will
+ refer to these types of sentences as ``secondary contexts'' because
+ they are generally not part of the main event description. 
+ \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/narrative_sample_ter.eps}
+ \caption{A Typical Terrorism Event Story (Document ID: TST2-MUC4-0039, excerpted)}
+\label{narrative_sample}
+\end{figure} 
+
+  \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/fleeting_sample_ter.eps}
+ \caption{Another Typical Terrorism Event Story (Document ID: TST1-MUC3-0026, excerpted)}
+\label{fleeting_sample}
+\end{figure} 
+
+ 
+ %to complete
+ To illustrate how secondary event contexts occur in event 
+ descriptions, Figure \ref{narrative_sample} shows a typical terrorism 
+ event story. The news article starts with introducing a kidnapping event 
+ at the beginning of the story, followed by an elaboration on the 
+ victim names and affiliation information in the context of a person identification.  
+ Then, the article reverts back to convey more information about the kidnapping event,
+  including specifically when it happened and the perpetrators involved. 
+ % So the secondary 
+ The mission of event extraction systems is to extract 
+ %the colored 
+ the underlined 
+ pieces of text and label each with their corresponding roles. 
+ %Specifically, 
+ %the green texts represent the victims and 
+ %the purple texts refer to the perpetrators. 
+ %the underlined texts represent the victims and perpetrators.
+ 
+ It is relatively easy for current event extraction systems to 
+ extract the event information in the first and third sentences because 
+ both sentences explicitly refer to the kidnapping event (primary contexts).
+ However, the middle sentence, without consulting the wider discourse, 
+ describes person identification that is not directly related to 
+ terrorism events. The victim information within it
+  tends to be overlooked by current event extraction systems 
+  because this sentence does not contain any mention 
+ of the kidnapping event.
+ The second sentence is a good representative of secondary contexts 
+ that commonly follow the main event descriptions  
+ and describe 
+ activities that tend to happen after the events of interest.
+ %but generally not immediately related to the events.
+  
+ %After we have looked into this article, we can see that this is ess
+ %This is essentially a discourse phenomenon and one 
+ To extract event information buried in secondary contexts, one option 
+ is to carry out discourse analysis that can explicitly link 
+ secondary contexts to the main event, but discourse modeling by itself 
+ is a difficult problem. 
+ As in Figure \ref{narrative_sample}, if we can accurately detect that 
+ the noun phrases ``THE TWO U.S. CITIZENS'' from the first sentence and 
+ ``THE VICTIMS'' from the second sentence actually refer to the same entity, 
+ then we can associate the person identification context with 
+ the kidnapping event and extract the victim information 
+ from the later sentence. However, entity coreference resolution 
+ across sentences is still a challenging problem in its own right. 
+
+  
+ In this chapter, I will introduce a multi-layered event extraction architecture, {\it TIER}, that 
+can effectively seek event information out of secondary contexts and therefore improve 
+the extraction coverage, while maintaining high precision.
+%Second, depending on the larger context, the seemingly relevant local context may not be 
+%truly about the 
+%referring to a relevant event due to ambiguity and metaphor. 
+%For example, 
+%``Obama was attacked'' may lead to
+%Obama being extracted as the victim of a physical attack,
+%even if the preceding sentences describe a presidential debate
+%and the verb ``attacked'' is being used metaphorically.
+%In this chapter, I will also introduce a bottom-up event extraction architecture, {\it Linker}, that can 
+%incorporate discourse information to make accurate extraction decisions by modeling 
+%a variety of textual cohesion properties in a structured sentence classifier.
+In the following sections, I will first discuss the challenges and obstacles 
+of identifying secondary event contexts.  Then I will present my multi-layered 
+event extraction architecture that can extract event information from both 
+primary and secondary contexts. I will focus on the main idea 
+that is to analyze text in multiple 
+granularities (document, sentence and noun phrase levels) to zoom in on the 
+relevant event information. I will also elaborate on the features 
+and machine learning settings used to implement a working system of the multi-layered 
+event extraction architecture.
+Finally, I will present the evaluation results on two event domains. 
+The first dataset is a standard event extraction benchmark collection for terrorism events.
+The second dataset was created recently 
+%within our group and 
+%serves the extraction evaluation 
+to evaluate event extraction for civil unrest events. 
+
+\section{Challenges in Detecting Secondary Event Contexts}
+\label{secondary}
+My goal here is to improve event extraction by learning to
+identify secondary role filler contexts in the absence of event keywords.
+I create a set of  classifiers to recognize {\it role-specific
+contexts} that suggest the presence of a likely role filler regardless
+of whether a relevant event is mentioned or not. For example, my model
+should recognize that a sentence describing an arrest probably
+includes a reference to a perpetrator, even though the  crime itself
+is reported elsewhere. Please refer to 
+subsection \ref{ssec:role-specific} for the details 
+of creating {\it role-specific} sentence classifiers. 
+
+% \begin{figure}[htbp]
+ \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/narrative_sample_CU.eps}
+ \caption{An Event Narrative Story about Civil Unrest}
+\label{narrative_sample_CU}
+\end{figure} 
+
+  \begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/fleeting_sample_CU.eps}
+ \caption{A Story with a Fleeting Reference about Civil Unrest}
+\label{fleeting_sample_CU}
+\end{figure} 
+
+Extracting information from these secondary
+contexts can be risky, however, unless we know that the larger context
+is discussing a relevant event. As an example, Figure \ref{fleeting_sample} 
+shows another terrorism event story.
+%to be completed, explain terrorism story, CU stories
+Unlike the one in Figure \ref{narrative_sample}, this document 
+focuses on an irrelevant topic about the presence of British and 
+Israeli mercenaries and only briefly mentions terrorism events 
+(mass murders) towards the end of the document. 
+However, the person identification contexts, while exactly 
+the same as in the story \ref{narrative_sample}, do not contain 
+victim information of terrorism events, because their surrounding 
+larger contexts are mainly about an irrelevant topic. 
+If event extraction systems scrutinize secondary contexts and 
+extract their noun phrases indiscriminately, 
+false hits will be produced that will affect extraction accuracy.
+Therefore, it is necessary to distinguish 
+%the two types of 
+%documents that are different in the manner of conveying 
+%event information, to achieve better event extraction performance. 
+this type of documents from the ones as in Figure \ref{narrative_sample}, 
+to well identify valid secondary event contexts.
+
+Specifically, I define an event
+narrative as an article whose main purpose is to report the details
+of an event.
+I will refer to the documents similar to the one in 
+Figure \ref{fleeting_sample} as {\it
+fleeting reference} texts because they do not focus on describing 
+an event and only mention a relevant event
+briefly in the document. 
+%There are also non-narrative documents that do not 
+%focus on reporting any specific stories, but briefly mention events 
+%of interest briefly. These documents contribute to 
+%event fleeting references too.
+For example, 
+the MUC-4 
+corpus, includes interviews, speeches, and terrorist
+propaganda that contain information about terrorist events. 
+The categorizing of documents that mention events into event narratives 
+and fleeting references is a general observation across different types of 
+events. Figure \ref{narrative_sample_CU} and \ref{fleeting_sample_CU} 
+show examples of an event narrative and a fleeting reference accordingly 
+for civil unrest events. Specifically, the story 
+as shown in Figure \ref{fleeting_sample_CU} is an event narrative 
+about an attack, but contains a fleeting reference to a civil unrest event. 
+Instead of manifesting each piece of event 
+information as in Figure \ref{narrative_sample} and \ref{fleeting_sample}, 
+the underlined sentences refer to the parts of documents that contain 
+event information.
+
+
+
+\section{TIER: Zooming in on Event Information by Multi-Granularity Text Analysis}
+\label{TIER}
+% At the highest-level, we create a document classifier that identifies one
+% particular text genre: {\it event narratives}. 
+%To address this, 
+The main idea behind my approach is to analyze documents at multiple
+levels of granularity in order to identify role fillers that occur in
+different types of contexts. My event extraction model progressively
+``zooms in'' on relevant information by first identifying the document
+type, then identifying sentences that are likely to contain relevant
+information, and finally analyzing individual noun phrases to identify
+role fillers. The key advantage of this architecture is that it allows
+us to search for information using two different principles: (1) we
+look for contexts that directly refer to the event, as per most
+traditional event extraction systems, and (2) we look for secondary
+contexts that are often associated with a specific type of role
+filler. Identifying these {\it role-specific contexts} can root out
+important facts would have been otherwise missed. This multi-layered
+approach creates an event extraction system that can discover role
+fillers in a variety of different contexts, while maintaining good
+precision. 
+
+To accurately detect secondary event contexts, 
+I adopt a two-pronged strategy for event extraction that
+handles {\it event narrative} documents differently from other
+documents. 
+%  (e.g., a news article that reports on the bombing of a
+% building or the assassination of a politician).
+%  We train a classifier
+% to identify event narrative documents that are relevant to a
+% particular domain (e.g., terrorism).
+I apply the {\it role-specific sentence classifiers} only to event
+narratives to aggressively search for
+role fillers in these stories. 
+However, other types of documents can mention relevant events too.
+To ensure that relevant
+information is extracted from \underline{all} documents, I also 
+apply a conservative extraction process to every document to extract
+facts from explicit event sentences. 
+\begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 6in]{figures/TIER_arch_full_3.eps}
+ \caption{TIER: A Multi-Layered Architecture for Event Extraction}
+\label{TIER_flow_chart_chap3}
+\end{figure} 
+
+\begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/TIER_path1.eps}
+ \caption{The First Extraction Path to Process Primary Event Contexts}
+\label{TIER_path_1}
+\end{figure} 
+
+% This paper presents a multi-layered architecture for event extraction that
+% progressively ``zooms in'' on relevant information.  
+My complete
+event extraction model, called TIER 
+(as shown in Figure \ref{TIER_flow_chart_chap3}), 
+incorporates both document genre
+and role-specific context recognition into 3 layers of analysis:
+document analysis, sentence analysis, and noun phrase (NP) analysis.
+At the top level, I train a text genre classifier to identify event
+narrative documents. At the middle level, I create two types of
+sentence classifiers.  {\it Event sentence classifiers} identify
+sentences that are associated with relevant events, and {\it
+  role-specific context classifiers} identify sentences that contain
+possible role fillers irrespective of whether an event is
+mentioned. At the lowest level, I use {\it role filler extractors} to
+label individual noun phrases as role fillers.  As documents pass
+through the pipeline, they are analyzed at different levels of
+granularity.
+% to progressively zoom in on relevant information.  
+All documents pass through the event sentence classifier, and event
+sentences are given to the role filler extractors.  
+Documents identified as event narratives additionally pass through 
+role-specific sentence classifiers, and the role-specific sentences are
+also given to the role filler extractors. 
+%Figure\ref{flow-chart} shows the multi-layered pipeline of our event
+%extraction system.
+
+
+
+\section{Stratified Extraction: Two Extraction Paths}
+\label{stratified}
+
+\begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/TIER/TIER_path2.eps}
+ \caption{The Second Extraction Path to Process Secondary Event Contexts}
+\label{TIER_path_2}
+\end{figure} 
+
+An important aspect of my model is that two different strategies are
+employed to handle documents of different types.  The event extraction
+task is to find any description of a relevant event, even if the event
+is not the main topic of the article. 
+%\footnote{Per the MUC-4 task
+%  definition \cite{muc4-proceedings}.} 
+% We cannot limit our search only
+% to event narratives because we need to find relevant information in
+% other types of documents as well. 
+Consequently, in the first extraction path as illustrated 
+in Figure \ref{TIER_path_1}, all documents are
+given to the event sentence recognizers and their mission is to
+identify any sentence that mentions a relevant event. This path
+through the pipeline is conservative because  information is extracted
+only from event sentences, but 
+\underline{all} documents are processed, including stories that contain only a fleeting
+reference to a relevant event.
+
+The second path (as shown in Figure \ref{TIER_path_2}) through the pipeline performs additional processing
+for documents that belong to the event narrative text genre.  For
+event narratives, we assume that most of the document discusses a
+relevant event so we can more aggressively hunt for event-related
+information in secondary contexts. 
+
+In the following subsections, I explain how I create the two types of sentence
+classifiers and the role filler extractors. I will return to the
+issue of document genre and the event narrative classifier
+in Section\ref{doc-section}.
+
+\section{Implementing TIER: Features and Learning Settings}
+\label{details}
+
+\subsection{Sentence Classification}
+\label{ssec:role-specific}
+
+I have argued that event role fillers commonly occur in two types of
+contexts: event contexts and role-specific secondary contexts.  For
+the purposes of this research, I use sentences as my definition of a
+``context'', although there are obviously many other possible
+definitions. 
+% Our goal is to create sentence classifiers that can identify
+% these two different types of contexts. 
+An {\it event context} is a
+sentence that describes the actual event. A {\it
+secondary context} is a sentence that provides information related to
+an event but in the context of other activities that may precede or
+follow the event. 
+% We have observed that many facts are
+% revealed in contexts that describe the aftermath of an event. For example,
+% law enforcement may recover the weapons that were used, identify the names of the victims, or determine which terrorist organization was responsible
+% for an attack.
+
+% We argue that for event narratives, role-specific sentence recognizers
+% are needed besides event sentence recognizer. The single event
+% sentence recognizer relies on event cues to separate event sentences
+% from the other sentences. % Therefore, it will be good at finding sentences which feature with
+% strong event cues. However, in event narratives, a large portion of
+% valuable information is hidden in less obvious event
+% sentences. Sometimes, knowledge-based inferences are needed to find
+% all relevant sentences. % Our proposed approach aiming to ease the issue is to build up a set of
+% role-specific sentence recognizers, one for each particular role. % The underlying tuition for role-specific sentence recognizers is that
+% knowing the document is an event report, we could potentially loosen
+% the tie. % We only require to see role-specific cues to carry out the
+% extractions. Take the terrorism doamin as an illustration, we might
+% expect the event sentence recognizer to find the sentences containing
+% cue verbs, {\bf bombed} and {\bf murdered}, or cue nouns, {\bf
+%   assassin} and {\bf death}. But the event sentence recognizer run
+% into trouble facing the following sentences: % % \begin{quote}
+% Sentence 1: A bomb {\bf was placed} on the lawn last night.
+% % Sentence 2: Three men {\bf were arrested}.
+% % Sentence 3: The bank building had \$ 3 million {\bf in damage}.
+% \end{quote}
+% % The stressed phrases are not exclusively for terrorism events, but
+% given the document is an event narrative, they infer information about
+% weapon, victim and target is available in sentences 1, 2, and 3. % By building one recognizer for each role, we want the recognizer to
+% learn the role-specific context features. % % Related idea was talked about as semantic affinity in
+% \cite{sid07}. Both ideas are based on the concept of relevant
+% regions. In \cite{sid07}, the relevant regions are sentences, the main
+% idea is % you only need to make sure the semantics of the extractions are
+% consistent with the semantics of the roles once the sentence is
+% relevant. Comparatively, our relevant regions are the whole documents, % besides, we are trying to learn role-specific context features instead
+% of the manually mapped semantic affinities for the extractions
+% themselves. It's also interesting to look at the functional difference
+% of two ideas. % By semantic affinity, \cite{sid07} try to escape the local context
+% limitations of single role filler candidates. Our role-specific
+% sentence recognizers try to deal with the discourse issue in event
+% description by scrutinizing more subtle role-specific % context features since writers generally do not repeat the clear event
+% cues in each sentence. % % \subsection{Build Up the Components}
+% \label{ssec:components}
+%
+
+For both types of classifiers, I use exactly the same feature set,
+but I train them in different ways. 
+%The MUC-4 corpus used in
+%our experiments includes a training set consisting of documents and
+%answer keys. 
+Generally in event extraction annotations, each document that describes a relevant event has 
+answer key templates with the role
+fillers ({\it answer key strings}) for 
+%each event.
+relevant events. To train the event
+sentence recognizer, I consider a sentence to be a positive training
+instance if it contains one or more answer key strings from \underline{any} of the
+event roles.  
+%This produced 3,092 positive training sentences. 
+All
+remaining sentences that do not contain any answer key 
+strings are used as negative instances.  
+%This produced
+%19,313 negative training sentences, yielding a roughly 6:1 ratio of negative
+ %to positive instances.
+
+ There is no guarantee that a classifier trained in this way will
+ identify event sentences, but my hypothesis was that training across
+ all of the event roles together would produce a classifier that learns to
+ recognize general event contexts.  This approach was also used to
+ train GLACIER's sentential event recognizer
+ \cite{patwardhan-emnlp09}, and they demonstrated that this approach
+ worked reasonably well when compared to training with event sentences labelled by human
+ judges.
+% posisentences manually labelled as event sentences by human judges.
+
+The main contribution of my work is introducing additional {\it
+role-specific sentence classifiers} to seek out  role
+fillers that appear in less obvious secondary contexts. 
+%added
+% At a first sight, it is not clear how to separate secondary contexts from primary contexts and 
+% some sentences could be treated as both primary contexts and secondary contexts. 
+% Instead, we adopt an indirect approach to find secondary contexts. 
+%
+I train a set
+of role-specific sentence classifiers, one for each type of event role.
+Every sentence that contains a role filler of the appropriate type
+ is used as a positive training instance. Sentences that do not contain any answer key strings are negative
+instances.
+%\footnote{
+I intentionally do not use sentences that contain
+  fillers for competing event roles as negative instances because 
+  sentences often contain multiple role fillers of different types (e.g., a weapon
+  may be found near a body). Sentences without \underline{any} role fillers
+  are certain to be irrelevant contexts.
+%}
+%added
+In this way, I force each classifier to focus on the contexts
+specific to its particular event role.
+I expect the role-specific
+sentence classifiers to find some secondary contexts
+that the event sentence classifier will miss, although some 
+sentences may  be classified as both. 
+
+Using all possible negative instances would produce an extremely skewed ratio of
+negative to positive instances. To control the skew and keep
+the training set-up consistent with the event sentence
+classifier, I randomly choose from the negative
+instances to produce 
+%a 6:1
+the same ratio of negative to positive instances as the event sentence classifier.
+
+% {\bf Training Setup:} we claim one sentence is role-specific if it contains one or more answer key strings fitted into one particular role. The first row in table \ref{role-distribution-table} shows the total number of % role-specific sentences per role in the training set while the second row shows the number of sentences only containing the role fillers for the particular role. We could see around half of % the role-specific sentences for {\it PERP\_IND} and {\it TARGET} only contain the single type of role fillers, and about $60$ percents of {\it  {\it PERP\_ORG}} and {\it VICTIM} role-specific sentences are only for the particular roles.
+% We train one classifier for each role using the sentences containing the specific type of role fillers as positive instances and randomly chosen $6$ times of positive instances from the irrelevant sentence pool as negative instances which is consistent with the training of % event sentence recognizer.
+
+Both types of classifiers use an SVM model created with
+SVMlin \cite{keerthi05}, and exactly the same features. The feature set
+consists of the unigrams and bigrams that appear in the training
+texts, the semantic class of each noun phrase\footnote{I used the
+Sundance parser \cite{riloff-sundance04} to identify noun phrases and assign
+semantic class labels.}, plus a few additional features to represent
+the tense of the main verb phrase in the sentence and  whether the document is long ($>$ $35$ words) or short ($<$ $5$ words). All of the feature values are binary.
+
+\subsection{Role Filler Extractors}
+\label{sssec:role-filler-extractors}
+
+% ER: is what I say below TRUE??  I had to guess...
+
+My extraction model also includes a set of role filler extractors,
+one per event role.  Each extractor receives a sentence as input and
+determines which noun phrases (NPs) in the sentence are fillers for
+the event role. To train an SVM classifier, noun phrases corresponding
+to answer key strings for the event role are positive instances. 
+I
+randomly choose among all noun phrases that are not in the answer keys
+to create a 10:1 \footnote{This ratio was determined empirically 
+by optimising performance on the tuning data, 
+it may need to be adjusted for unseen domains.} ratio of negative to positive instances.
+
+The feature set for the role filler extractors is much richer than that of
+the sentence classifiers because they must carefully consider the
+local context surrounding a noun phrase. 
+I will refer to the noun phrase being labelled as the {\it targeted NP}. The role filler extractors use three types of features:
+
+{\it Lexical features:} I represent four words to the left and four
+words to the right of the targeted NP, as well as the head noun 
+% identified by the Sundance parser \cite{riloff-sundance04}
+and modifiers (adjectives and noun modifiers) of the targeted NP itself.
+
+% ER: how exactly is this done?  Truly exhaustive?? % Around each NP in the *sentence*? or context window?
+{\it Lexico-syntactic patterns:} I use the AutoSlog pattern generator
+%\cite{riloff-sundance04} 
+\cite{autoslog-aaai93} to automatically create lexico-syntactic patterns
+around each noun phrase in the sentence. These patterns are similar to
+dependency relations in that they typically represent the syntactic
+role of the NP with respect to other constituents (e.g., subject-of,
+object-of, and noun arguments). 
+
+% ER: again, each NP in the sentence or context window?
+{\it Semantic features:} I use the Stanford NER tagger
+\cite{Finkel05} to determine if the targeted NP is a named entity, and
+I use the Sundance parser
+ \cite{riloff-sundance04}
+to assign semantic class labels to each NP's head noun.
+
+\subsection{Event Narrative Document Classification}
+\label{doc-section}
+
+One of my goals was to explore the use of {\it document genre} to
+permit more aggressive strategies for extracting role fillers. 
+% Our
+% hypothesis was that if a document is focused on reporting a relevant
+% event, then we should aggressively search for event-related
+% information. 
+In this section, I first present an analysis of one of my experimental datasets, the
+MUC-4 data set, a standard benchmark collection of terrorism event stories 
+that are used for evaluating event extraction systems, which reveals the distribution of event narratives in
+the corpus. Next, I will explain how I train a classifier to
+automatically identify event narrative stories.
+
+\vspace{.1in}
+{\bf Manual Analysis}
+\vspace{.1in}
+
+I define an {\it event narrative} as an article whose main focus is
+on reporting the details of an event. 
+For the purposes of this research,
+I am only concerned with events that are relevant to the event extraction
+task (i.e., terrorism). 
+An {\it irrelevant document} is an article that does not
+mention any relevant events. In between these extremes is another
+category of documents that briefly mention a relevant event, but the
+event is not the focus of the article. I will refer to these
+documents as {\it fleeting reference} documents. Many of the fleeting
+reference documents in the MUC-4 corpus are transcripts of interviews,
+speeches, or terrorist propaganda communiques that refer to a
+terrorist event and mention at least one role filler, but within a
+discussion about a different topic (e.g., the political ramifications of a
+terrorist  incident).
+%huang
+%example of both an event narrative and a fleeting reference
+
+To gain a better understanding of how I might create a system to
+automatically distinguish event narrative documents from fleeting
+reference documents, I manually labelled the 116
+relevant documents in the tuning set.  This was an informal study
+solely to help us understand the nature of these texts.
+%  we 
+% do not use these annotations for anything other than analysis.
+% The criterion of labeling is whether the
+% documents' main topics are actually about the reported terrorism
+% events. If the documents only mention the reported events as
+% references and they actually focus on irrelevant topics, they are labeled as fleeting references. Otherwise, they
+% are labeled as event reports.
+
+
+\begin{table}[ht]
+\small
+\centering
+\begin{tabular}[center]{|lccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf } & {\bf \# of Event} & {\bf \# of Fleeting} & ~ \\ {\bf } & {\bf Narratives} & {\bf  Ref. Docs} & {\bf Acc}  \\ \hline
+{\bf Gold Standard} & 54 & 62 & \\
+% {\bf WordNet-NoPro} &  52/80/64 &  36/57/44 &  23/47/30 & 15/83/25 &
+% ~ & 61/33/43 & ~ & 27/43/32.9  \\ \hline
+{\bf Heuristics} & 40 & 55 & .82\\ \hline
+% {\bf Text Classifier} & 37 & 48 & 81\%\\ \hline
+% {\bf 1.0fixed} & 81/70/75 & 53/80/64 & 71/74/72 & 68/67/68 & 84/92/88 & 42/80/55 & 71/77/73.9 \\ \hline
+% {\bf 2.0fixed} & 75/79/77 & 36/82/50 & 53/79/63 & 50/74/60 & 83/92/87 & 36/82/50 & 60/81/68.8 \\ \hline
+\end{tabular}
+\caption{Manual Analysis of Document Types}
+\label{separation-table}
+\end{table}
+
+
+The first row of Table \ref{separation-table} shows the distribution of event narratives and
+fleeting references based on my ``gold standard'' manual annotations.
+We see that more than half of the relevant documents (62/116) are {\it not}
+focused on reporting a terrorist event, even though they contain information about a terrorist event somewhere in the document.
+
+\vspace{.1in}
+{\bf Heuristics for Event Narrative Identification}
+%\label{event-narrative-heuristics}
+\vspace{.1in}
+
+My goal is to train a document classifier to automatically identify
+event narratives. The MUC-4 answer keys reveal which documents are
+relevant and irrelevant with respect to the terrorism domain, but they
+do not tell us which relevant documents are event narratives and which
+are fleeting reference stories. Based on my manual analysis of the
+tuning set, I developed several heuristics to help separate them.
+
+I observed two types of clues: the location of the
+relevant information, and the density of relevant information. First,
+I noticed that event narratives tend to mention relevant information
+within the first several sentences, whereas fleeting reference texts
+usually mention relevant information only in the middle or end
+of the document. Therefore my first heuristic requires that an event
+narrative
+% to see the first relevant sentence at
+% the relatively beginning section. Faithful to the labeled tuning set,
+% require the first relevvant sentence to appear no later than the
+mention a role filler within the first 
+%7
+several sentences. % seventh sentence of the document to identify it as an event narrative.
+
+\begin{figure}[h]
+\center
+% \begin{center}
+\subfigure[Event Narrative Stories]{
+\includegraphics[width = 2.5in, height = 2.2in, scale=0.5]{figures/TIER/tuning_coref_event_10_3.eps}}
+\subfigure[Fleeting Reference Stories]{
+\includegraphics[width = 2.5in, height = 2.2in, scale=0.5]{figures/TIER/tuning_coref_fleet_10_3.eps}}
+\caption{Histograms of Relevant Sentence Densities in Event Narratives (a) and Fleeting References (b)}
+% \end{center}
+\label{histograms}
+\end{figure}
+
+Second, event narratives generally have a  higher
+density of relevant information.
+% Unsurprisingly, more sentences would be involved with the event
+% description in event narratives on average compared with fleeting
+% references. 
+I use several criteria to estimate information density
+because a single criterion was inadequate to cover different
+scenarios. 
+%For example, some documents only contain 1-2 role fillers,
+%but those role fillers are mentioned repeatedly throughout the
+%document. Other documents mention each role filler only once but
+%contain a large number of distinct role fillers. 
+For example, some documents mention role fillers 
+throughout the document. 
+Other documents contain a high concentration of role fillers in some parts 
+of the document but no role fillers in other parts.
+I developed three
+density heuristics to account for different situations.  
+All of these heuristics count distinct role fillers.
+The first density
+heuristic requires that more than 50\% of the sentences contain at least one role
+filler
+%that was not mentioned previously in the story 
+($\frac
+{|RelSents|} {|AllSents|} > 0.5$)
+.  Figure 
+%huang
+\ref{histograms} 
+shows
+histograms for different values of this ratio in the event narrative
+(a) vs. the fleeting reference documents
+(b) in MUC-4 dataset. % We consider a sentence to
+% be information-bearing if it contains at least one answer key string.
+The histograms clearly show that documents with a high ($>$ 50\%)
+ratio are almost always event narratives. % However low density does not necessarily mean that a
+% document is a fleeting reference story.
+
+%huang
+%\begin{figure}[h]
+%\center
+%% \begin{center}
+%\subfigure[]{
+%\includegraphics[width = 1.51in, height = 1.2in, scale=0.5]{tuning_coref_event_10_4.eps}}
+%\subfigure[]{
+%\includegraphics[width = 1.51in, height = 1.2in, scale=0.5]{tuning_coref_fleet_10_4.eps}}
+%\caption{Histograms of Density Heuristic \#1 in Event Narratives
+%  (a) vs. Fleeting References (b).}
+%% \end{center}
+%\label{histograms}
+%\end{figure}
+
+
+% RH: maybe add a footnote here explaining precisely what this means!?
+A second density heuristic requires that the ratio of different {\it types}
+of roles to sentences be $>$ 50\% ($\frac {|Roles|}
+{|AllSents|} > 0.5$). A third density heuristic requires that the
+ratio of distinct role {\it fillers} to sentences be $>$ 70\% ($\frac
+{|RoleFillers|} {|AllSents|} > 0.7$). 
+%This heuristic accounts for the
+%cases where the same 1 or 2 role fillers are mentioned repeatedly.  
+If
+any of these three criteria are satisfied, then the document is
+considered to have a high density of relevant information.\footnote{Heuristic \#1 covers most of the  event narratives.}
+
+
+
+% Besides, we use the number of sentences containing at least
+% one answer key string unseen in previous sentences as the numerator to
+% calculate the relevant sentence density since one single answer key
+% string could be touched many times along with the event
+% description. From \ref{histograms}, we can see less than half
+% sentences are relevant in most of the fleeting reference
+% texts. Comparatively, many event narratives go beyond the relevant
+% sentence density of $0.5$.
+
+% We identified 29 event narratives and made mistakes on only 3 fleeting
+% reference texts with the above rule. To recover more event reports, we
+% adopted two additional rules following the same road to complete the
+% relevant information density heuristic, and
+
+I use these heuristics to label a document as an event
+narrative if: (1) it has a high density of relevant information, \underline{AND} (2)
+it mentions a role filler within the first 7 sentences.
+
+The second row of Table \ref{separation-table} shows the performance
+of these heuristics on the tuning set in MUC-4 dataset. The heuristics correctly
+identify $\frac{40}{54}$ event narratives and $\frac{55}{62}$ fleeting
+reference stories, to achieve an overall accuracy of 82\%. These
+results are undoubtedly optimistic because the heuristics were derived
+from analysis of the tuning set. But we felt confident enough to move
+forward with using these heuristics to generate training data for
+an event narrative classifier.
+
+
+\vspace{.1in}
+{\bf Event Narrative Classifier}
+\label{ssec:event-narrative-train}
+\vspace{.1in}
+
+
+The heuristics above use the answer keys to help determine whether a
+story belongs to the event narrative genre, but my goal is to create
+a classifier that can identify event narrative documents without the
+benefit of answer keys. So I used the heuristics to automatically
+create training data for a classifier by labelling each relevant
+document in the training set as an event narrative or not.
+%a fleeting reference document. 
+In the MUC-4 dataset, of the $700$ relevant documents, $292$ were
+labeled as event narratives. I then trained a document classifier
+using the $292$ event narrative documents as positive instances and
+all irrelevent training documents as negative instances. The $308$
+relevant documents that were not identified as event narratives were
+discarded to minimize noise (i.e., 
+%I estimate that my heuristics fail 
+On the tuning data, my heuristics failed to identify 25\% of the event narratives.).
+I then trained an SVM classifier using bag-of-words (unigram)
+features.
+% \footnote{Without relying on answer keys, it wasn't obvious
+% how to create richer features that estimate relevant information density, though this
+% is an obvious area for improvement in future work.}
+
+Table\ref{doc-class-results} shows the performance of the event narrative
+classifier on the manually labeled tuning set in MUC-4 dataset. The classifier
+identified 69\% of the event narratives with 63\% precision. Overall
+accuracy was 81\%. 
+% While its performance is far from perfect, it was
+% able to identify nearly 70\% of the event narratives.
+
+% It finds 37 event
+% narratives and it could filter out 48 fleeting reference texts.
+
+\begin{table}[h]
+\small
+\centering
+\begin{tabular}[center]{|ccc|} \hline
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+%|>{\small}c|>{\small}c|}  \hline
+{\bf Recall} & {\bf Precision} & {\bf Accuracy} \\  \hline
+.69 & .63 & .81\\ \hline
+\end{tabular}
+\caption{Event Narrative Classifier Results}
+\label{doc-class-results}
+\end{table}
+
+At first glance, the performance of this classifier is
+mediocre. However, these results should be interpreted loosely because
+there is not always a clear dividing line between event narratives and
+other documents. For example, some documents begin with a specific
+event description in the first few paragraphs but then digress to
+discuss other topics. Fortunately, it is not essential for TIER to
+have a perfect event narrative classifier since \underline{all}
+documents will be processed by the event sentence recognizer
+anyway. The recall of the event narrative classifier means that nearly
+70\% of the event narratives will get additional scrutiny, which
+should help to find additional role fillers. Its precision of 63\%
+means that some documents that are not event narratives will also get
+additional scrutiny, but information will be extracted only if both
+the role-specific sentence recognizer and NP extractors believe they
+have found something relevant. 
+
+\vspace{.1in}
+{\bf Domain-relevant Document Classifier}
+\label{domdoc-section}
+\vspace{.1in}
+
+For comparison's sake, I also created a document classifier to
+identify {\it domain-relevant} documents. That is, I trained a
+classifier to determine whether a document is relevant
+to the domain of terrorism,  irrespective of  the style of the
+document. I trained an SVM classifier with the same bag-of-words
+feature set, using all relevant documents in the training set as
+positive instances and all irrelevant documents as negative instances.
+I use this classifier for several experiments described in the next section.
+
+
+
+\section{Evaluation}
+\label{eval-section}
+
+
+\subsection{Data Sets}
+\label{TIER:creating-annotations}
+
+To verify the general applicability of my multi-layered event extraction architecture 
+to extract events of different types, I will evaluate the implemented system 
+on two datasets of distinct event domains. 
+
+The first one is 
+the MUC-4 data set
+\cite{muc4-proceedings}, 
+a standard benchmark collection 
+for evaluating event extraction systems. 
+The corpus consists of 1700 documents about Latin American terrorist
+events including kidnapping, arson, bombing and other attack events.
+Each document comes with associated answer key templates, a template per event. 
+Roughly half of the
+documents are relevant (i.e., they mention
+at least 1 terrorist event) and the rest are irrelevant.
+%The relevant documents 
+
+The second domain is for civil unrest events. 
+Civil unrest (CU) is a broad term that is typically used 
+%by the media or
+%law enforcement 
+to describe a form of public disturbance caused by a
+group of people for a purpose. 
+%Civil unrest events include activities to protest
+%against major socio-political problems, events of activism to support
+%a cause (e.g., peace rallies or large-scale marches to support a
+%prominent figure), and events to promote changes in government or
+%business affairs (e.g., large gatherings to rally for higher wages).
+Types of civil unrest can include 
+%but are not necessarily limited to:
+strikes, rallies, sit-ins and other forms of obstructions, riots,
+sabotage, and other forms of public disturbance motivated by a
+cause. 
+%It is intended to be a demonstration to the public, the
+%government, or an institution (e.g., business or educational sectors),
+%but can sometimes escalate into general chaos.
+I 
+%practiced 
+went through the pipeline of human annotations to 
+create the civil unrest dataset. 
+I defined initial annotation guidelines and modified them 
+in several iterations 
+to address the confusions and issues that the annotators 
+came across when they applied the guidelines. 
+The annotated documents were 
+%randomed 
+selected from the  
+English Gigaword corpus \cite{Gigaword}, by randomly 
+sampling from the documents 
+that contain one of six predefined civil unrest event keyword, 
+``protest'',
+``strike'', ``march'', ``rally'', ``riot'' and ``occupy'', 
+or their variations. 
+%\footnote{The six civil unrest event keywords are ``protest'',
+%``strike'', ``march'', ``rally'', ``riot'' and ``occupy''.} to ensure a reasonable amount of 
+%relevant documents retrieved\footnote{because Gigaword is a 
+%broad-coverage corpus and most of the documents in this corpus are not 
+%civil unrest stories.}. 
+
+%With the finalized annotation guidelines, 
+%two annotators annotated 372 \footnote{I originally randomly 
+%sampled 400 documents, then 
+%I removed 28 out because these documents are essentially 
+%a list of news summaries and do not describe any particular story.} documents separately. 
+
+%  \begin{figure}[h]
+% \centering
+%% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+%% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+% \includegraphics[width = 2in]{figures/TIER/CU_annotation_sample_2.eps}
+% \caption{An Example: Civil Unrest Event Annotations}
+%\label{annotation-cu-role-sample}
+%\end{figure} 
+
+
+
+\vspace{.1in}
+{\bf Creating Civil Unrest Event Annotations}
+\vspace{.1in}
+
+The annotations were obtained through two stages. 
+First, at the document level, two annotators 
+identified the documents that mention a civil unrest event,
+following the guidelines as specified in Appendix \ref{Appendix:EventDocumentAnnotationGuidelines}. 
+In this stage, the two annotators first annotated 100 documents in common 
+and they achieved a relatively high $\kappa$ \cite{Cohen60} score of .82. 
+Cohen's kappa coefficient is a statistical measure of inter-rater agreement. 
+It is generally thought to be a more robust measure 
+than simple percent agreement calculation because 
+$\kappa$ takes into account the agreement occurring by chance. 
+Then each
+annotator annotated 150 more documents.
+Therefore in total, 400 documents were annotated in this stage. 
+Out of 400 documents, 129 documents were labeled as event relevant. 
+Therefore, around two thirds of the documents 
+that contain event keywords did not mention any civil unrest event. 
+%This shows the necessity to study explicit event recognition
+
+The second stage annotated the documents that have been 
+labeled as event relevant in the previous stage, with segments of text 
+that correspond to one of the identified event roles for civil unrest events.
+Before event role filler annotations, I 
+removed summary articles first and then had annotators 
+label the rest documents. 
+Summary articles are essentially 
+a list of news summaries and do not elaborate on 
+any particular story.
+Specifically, I removed 28 summary articles, among these, 
+14 was labeled as event relevant.
+Therefore, 372 documents will be used for evaluating my event extraction systems.
+The event role filler annotation guidelines are specified in 
+Appendix \ref{Appendix:EventRoleFillerAnnotationGuidelines}.
+Figure \ref{annotation-cu-role-sample-withDoc} shows 
+a sample document (This document is the same as the one 
+we have seen previously as in Figure \ref{narrative_sample_CU}, 
+and the underlined sentences are event relevant.) 
+and its annotations. 
+%the annotations 
+%for the sample document as shown in Figure \ref{narrative_sample_CU}, 
+%which also shown here on the above of its annotations.  
+%But I removed 14 documents out leaving 115 documents annotated in this stage 
+%because those 14 documents are essentially 
+%a list of news summaries and do not describe any particular story.
+Over six event roles, the annotators achived the overall $\kappa$ score of .83.
+Then the two annotators adjudicated their decisions to create  
+the final civil unrest event annotations.
+%To be consistent, I also removed the summary documents \footnote{There are 
+%14 summary documents in the irrelevant ones.} from the 
+%event irrelevant documents as annotated in the first stage.  
+%Table \ref{test-set-stats-cu} shows the distribution of 
+%role fillers in this domain.
+
+
+
+% In the training set, $700$ documents are relevant and are labeled with
+
+% one or more event templates. $292$ relevant documents identified with
+
+% the heuristics descirbed in \ref{even-narrative-identification} are
+
+% used as positive instances in training
+
+% the event narrative document classifier. In the testing set, $126$
+
+% documents are event relevant and $65$ of them are identified as event
+
+% narratives according to the heuristics.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+PerpInd & PerpOrg & Target & Victim & Weapon \\ \hline
+129 & 74 & 126 & 201 & 58 \\
+\hline
+\end{tabular}
+\caption{\# of Role Fillers in the MUC-4 Test Set}
+\label{test-set-stats}
+\end{table}
+
+%golds: Agent 408
+%golds: Site 120
+%golds: Location 147
+%golds: HumanEffect 73
+%golds: PhysicalEffect 36
+%golds: Instrument 67
+
+
+
+\subsection{Evaluation Methods}
+\label{tier:eval-methods}
+For the MUC-4 data set, I evaluate the implemented system on the five  ``string-fill'' event roles: {\it perpetrator
+ individuals, perpetrator organizations, physical targets, victims}
+ and {\it weapons}.  
+ %These event roles (essentially) represent the agents,
+%patients, and instruments associated with terrorism events. 
+Table \ref{test-set-stats}
+shows the distribution of gold role fillers in the MUC-4 test set. 
+For the civil unrest data set, I evaluate the system on four event roles: 
+{\it agent, site, location} and {\it instruments} \footnote{
+Two other event roles, {\it victim and (affected) facilities}, were annotated too, 
+but I decided not to include them in the evaluation because they 
+are only sparsely seen in civil unrest descriptions.}. 
+%Similarly, these event roles represent the agents and properties that are 
+%important to represent civil unrest events. 
+Table \ref{test-set-stats-cu} shows the distribution of gold role fillers in the 
+Civil Unrest data set.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+Agent & Site & Location  & Instrument \\ \hline
+408 & 120 & 147  & 67 \\
+%Agent & Site & Location & Victim & Facility & Instrument \\ \hline
+%408 & 120 & 147 & 73 & 36 & 67 \\
+\hline
+\end{tabular}
+\caption{\# of Role Fillers in the CU Test Set}
+\label{test-set-stats-cu}
+\end{table}
+
+
+The complete IE task involves template
+ generation, which is complex because many documents have multiple
+ templates (i.e., they discuss multiple events). My work focuses on
+ extracting individual facts and not on template generation per se
+ (e.g., I do not perform coreference resolution or event
+ tracking). Consequently, my evaluation follows that of other recent work
+ and evaluates the accuracy of the extractions themselves by matching
+ the head nouns of extracted NPs with the head nouns of answer key
+ strings (e.g., ``armed guerrillas'' is considered to match
+ ``guerrillas'')\footnote{Pronouns were discarded since I do not
+ perform coreference resolution. Duplicate extractions with the same head
+ noun were counted as one hit or one miss.}.
+ 
+\subsection{Metrics}
+\label{tier:metrics}
+ My results are reported as
+ {\it Precision/Recall/F(1)-score} for each event role separately. 
+ {\it Precision} measures the accuracy of event extraction systems and 
+ it is defined as the ratio of the correct role filler extractions over 
+ the total number of extractions generated by a system.
+ {\it Recall} measures the coverage of event extraction systems. 
+It is defined as the ratio of the correct role filler extractions over 
+the total number of gold extractions that are annotated by humans. 
+{\it F(1)-score} is the harmonic mean of {\it Precision} and {\it Recall}. 
+The following defines {\it F(1)-score}:\\
+\vspace{.1in}
+$F(1)\-score = \frac{2 * Precision * Recall}{Precision + Recall}$
+\vspace{.1in}
+
+
+ I  also show an overall average for all event roles combined.\footnote{
+For the previous systems 
+that I compare my systems to, I
+ generated the Average scores myself by macro-averaging over the
+ scores reported for the individual event roles.}
+
+
+\section{Evaluating TIER on the MUC-4 Data Set}
+In this section, I will show experimental results on the MUC-4 data set. 
+MUC-4 data is a standard benchmark collection and it has been used 
+to evaluate several previous event extraction systems. 
+Therefore, for this data set, I can compare the performance 
+of my system with three other event extraction systems that have 
+reported evaluation results on this data set. 
+To be consistent with
+previously reported results, 
+%on this data set, 
+out of the total 1700 documents, 
+I use the $1300$ DEV
+documents for training, $200$ documents (TST1+TST2) as a tuning set
+and $200$ documents (TST3+TST4) as the test set.
+
+%When evaluating my system, 
+%In addition, I will report the performance of the variations of 
+%my system by 
+%While a significant amount of research has been done using this 
+%data set, the overall event extraction performance is still limited.
+In addition to reporting the results of my multi-layered event extraction system, 
+I will also evaluate its variations 
+by replacing or taking off certain components of the full system. 
+Finally, based on the performance of my system,
+I will present my analysis on the tuning documents of the MUC-4 data set, 
+shedding light on the strengths and limitations of TIER.
+
+\subsection{Baselines}
+
+\begin{table}[ht]
+
+\footnotesize
+
+\centering
+
+\begin{tabular}[center]{|p{1.4in}|ccccc|c|} \hline
+
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+
+%|>{\small}c|>{\small}c|}? \hline
+
+{\bf Method} & {\bf PerpInd} & {\bf PerpOrg} & {\bf Target} & {\bf Victim} &
+
+{\bf Weapon}  & {\bf Average} \\ \hline
+
+\multicolumn{7}{|c|}{Baselines} \\ \hline
+
+{\bf AutoSlog-TS} & 33/49/40 & 52/33/41 & 54/59/56 & 49/54/51 & 38/44/41 & 45/48/46 \\
+
+% {\bf WordNet-NoPro} &? 52/80/64 &? 36/57/44 &? 23/47/30 & 15/83/25 &
+
+% ~ & 61/33/43 & ~ & 27/43/32.9? \\ \hline
+
+{\bf Semantic Affinity} & 48/39/43 & 36/58/45 & 56/46/50 & 46/44/45 & 53/46/50 & 48/47/47 \\
+
+{\bf GLACIER} & 51/58/{\bf 54} & 34/45/38 & 43/72/53 & 55/58/56 & 57/53/55 & 48/57/52 \\ \hline
+
+
+
+\multicolumn{7}{|c|}{New Results without document classification} \\ \hline
+
+{\bf AllSent} & 25/67/36 & 26/78/39 & 34/83/49 & 32/72/45 & 30/75/43  & 30/75/42 \\
+
+{\bf EventSent} & 52/54/53 & 50/44/47 & 52/67/59 & 55/51/53 & 56/57/56  & 53/54/54 \\
+
+{\bf RoleSent} & 37/54/44 & 37/58/45 & 49/75/59 & 52/60/55 & 38/66/48  & 43/63/51 \\
+
+{\bf EventSent+RoleSent} & 38/60/46 & 36/63/46 & 47/78/59 & 52/64/57 &
+
+36/66/47  & 42/66/51 \\ \hline
+
+\multicolumn{7}{|c|}{New Results with document classification} \\ \hline
+
+{\bf Dom/(ESent+RSent)} & 45/54/49 & 42/51/46 &
+
+51/68/58 & 54/56/55 & 46/63/53  & 48/58/52 \\
+
+{\bf ESent+Dom/RSent} & 43/59/50 & 45/61/{\bf 52} & 51/77/{\bf 61} & 52/61/56 & 44/66/53  & 47/65/54 \\
+
+%{\bf EventDocs,RoleSent} & 51/40/45 & 50/33/40 & 54/55/55 & 58/40/48 & 60/58/59 & 55/45/50 \\
+
+{\bf ESent+ENarr/RSent} & 48/57/52 & 46/53/50 & 51/73/60 & 56/60/{\bf 58} & 53/64/{\bf 58} & 51/62/{\bf 56} \\ \hline
+
+
+
+% {\bf 1.0fixed} & 81/70/75 & 53/80/64 & 71/74/72 & 68/67/68 & 84/92/88 & 42/80/55 & 71/77/73.9 \\ \hline
+
+% {\bf 2.0fixed} & 75/79/77 & 36/82/50 & 53/79/63 & 50/74/60 & 83/92/87 & 36/82/50 & 60/81/68.8 \\ \hline
+
+\end{tabular}
+
+\caption{Experimental results on the MUC-4 Data Set, reported as Precision/Recall/F-score}
+
+\label{results-table}
+
+\end{table}
+
+
+As baselines, I compare the performance of my IE system with three
+other event extraction systems.  The first baseline is AutoSlog-TS
+\cite{riloff-aaai96}, which uses domain-specific extraction patterns.
+AutoSlog-TS applies its patterns to every sentence in every document,
+so does not attempt to explicitly identify relevant sentences or
+documents.  The next two baselines are more recent systems: the
+\cite{patwardhan-emnlp07} {\it semantic affinity} model (PIPER) and the
+\cite{patwardhan-emnlp09} GLACIER system.  The {\it semantic affinity}
+approach explicitly identifies event sentences and uses patterns that
+have a semantic affinity for an event role to extract role
+fillers. GLACIER is a probabilistic model that incorporates both
+phrasal and sentential evidence jointly to label role fillers. 
+Please also refer to Patwardhan\'s Ph.D. dissertation 
+\cite{Patwardhan10} for more details.
+
+
+
+% ER: should we mention that Aslog and SemAff are weakly supervised
+
+% but GLACIER is fully supervised? Maybe in conclusions...
+
+
+
+The first 3 rows in Table \ref{results-table} show the results
+ for each of these systems on the MUC-4 test set. They all used the same
+evaluation criteria as my results.
+
+\subsection{Experimental Results}
+
+\label{results-section}
+
+The middle portion of Table\ref{results-table} shows the results of a
+variety of event extraction models that I created using different
+components of my system. The \textbf{AllSent} row shows the
+performance of my Role Filler Extractors when applied to every
+sentence in every document. This system produced high recall,
+but precision was consistently low.
+
+% By F1-scores, many of the roles get comparable extraction performance
+
+% with the AutoSlog-TS baseline.
+
+The \textbf{EventSent} row shows the performance of my Role
+Filler Extractors applied only to the {\it event sentences}
+identified by my event sentence classifier.  This boosts precision
+across all event roles, but with a sharp reduction in recall. There is 
+a roughly $20$ point swing from recall to precision.  These
+results are similar to GLACIER's results on most event roles, which
+isn't surprising because GLACIER also incorporates event sentence identification.
+
+
+% unified extraction model in a probabilistic way, we could see except
+
+% the role {\it Weapon}, we get higher precisions with slight recall
+
+% losses, especially the precisions of {\it PerpOrg} and {\it Target}
+
+% get more than $10$ points gains. We think the reason for the precision
+
+% gains is that we always constrain the event extraction within event
+
+% relevant sentences instead of jointly considering the scores produced
+
+% by event sentence recognizer and role filler extractors as GLACIER and
+
+% we never trust the local role filler extractors.
+
+
+
+The \textbf{RoleSent} row shows the results of my Role Filler
+Extractors applied only to the {\it role-specific
+  sentences} identified by my classifiers. There is a 12-13
+point swing from recall to precision compared to the
+\textbf{AllSent} row. 
+%This result is consistent with my hypothesis
+%that many role fillers exist in role-specific contexts that are not
+%event sentences. 
+As expected, extracting facts from
+role-specific contexts that do not necessarily refer to an event is
+less reliable. The \textbf{EventSent+RoleSent} row shows the results when
+information is extracted from both types of sentences. I see slightly
+higher recall, which confirms that
+one set of extractions is not a strict subset of the other. But
+precision is still relatively low.
+
+% As expected, we see recall increase
+
+% by roughly $10$ points for all event roles except {\it PerpInd}.
+
+% however, the precisions are much lower, especially for roles {\it
+
+% PerpInd}, {\it PerpOrg} and {\it Weapon}. We could gain some insights
+
+% from the sentence classification performance shown in table
+
+% \ref{sentence-classification-table}. The first five columns show the
+
+% precision(P), recall(R) and F1-measure(F) for each event role, and the
+
+% next two columns show their {\it macro}-average and {\it
+
+% micro}-average performance. They are all generated by role-specific
+
+% sentence recognizers while the last column reports the performance of
+
+% event sentence recognizer. We could see the role-specific sentence
+
+% recognizers find more relevant sentences while suffer low
+
+% precisions. We want to point out that all the recalls in table
+
+% \ref{sentence-classification-table} seem still low mainly because we
+
+% are dividing the number of sentences found by the number of sentences
+
+% containing at least one answer key string and multiple sentences could
+
+% be counted even they contain the same answer key string.
+
+% ER: where do we describe the RelDoc classifier? Let's move this into
+
+% Section 4...
+
+
+The next set of experiments incorporates document classification as
+the third layer of text analysis. 
+Here, I wanted to determine how event narrative document classification 
+performed compared to topic-based document classification, as used 
+in the multi-layered event extraction implementations. 
+Therefore, I trained two different document classifiers. 
+The Event Narrative Document Classifier ({\bf ENarr}) 
+was trained to identify event narratives, which are documents 
+that are dedicated to report details of events.  
+In contrast, Domain-relevant Document Classifier ({\bf Dom}), as described in
+Section \ref{domdoc-section},  
+was trained to determine whether a document 
+is relevant
+to the domain and describes any relevant event, irrespective of  the style of the
+document.
+The \textbf{Dom/(ESent+RSent)} row shows the results of 
+applying both types of sentence classifiers only to documents identified as
+domain-relevant by the Domain-relevant Document Classifier. 
+Extracting information only from
+domain-relevant documents improves precision by $+6$, but also
+sacrifices $8$ points of recall. 
+
+The \textbf{EventSent} row revealed that information found in event
+sentences has the highest precision, even without relying on document
+classification. I concluded that evidence of an event sentence is
+probably sufficient to warrant role filler extraction irrespective of
+the style of the document. As I discussed in Section \ref{doc-section},
+many documents contain only a fleeting reference to an event, so it is
+important to be able to  extract information from those isolated
+event descriptions as well. Consequently, I created a system,
+\textbf{ESent+Dom/RSent}, that extracts information
+from  event sentences in {\it all} documents, but  extracts information
+from role-specific sentences only if they appear in a domain-relevant
+document. This architecture captured the best of both worlds: recall
+improved from $58$\% to $65$\% with only a one point drop in precision.
+
+
+
+% classifier, from the fourth row of table \ref{results-table}, we could
+
+% see the precisions go up for all roles except for {\it Victim} and on
+
+% average, we increase the recall by $5$ point and lose $1$ point of
+
+% precision.
+
+
+
+Finally, I evaluated the idea of using document {\it genre} as a
+filter instead of domain relevance. The last row,
+\textbf{ESent+ENarr/RSent}, shows the results of my final
+architecture which extracts information from event sentences in all
+documents, but extracts information from role-specific sentences only
+in Event Narrative documents. This architecture produced the
+best F1 score of $56$. This model increases 
+precision by an additional 4 points and produces
+the best balance of recall and precision. 
+Therefore, compared to the Domain-relevant Document Classifier, 
+event narrative genre recognition is more 
+effective to seek out secondary event contexts, when 
+plugged in the multi-layered event extraction architecture.
+
+% %difference from previous models: doc-level view, secondary contexts
+% Compared with the baselines, TIER improved the event extraction performance significantly 
+% by exploring the secondary contexts explicitely and incorporating the document level evidence.
+% Specifically, TIER increased the recalls on almost all the event roles by finding out secondary contexts
+% and at the same time, it maintained high precisions by limiting the relevant information extraction 
+% within a specific document genre as event narratives.
+
+Overall, TIER's multi-layered extraction  architecture produced higher F1
+scores than previous systems on four of the five event roles. 
+The improved recall is due to the additional extractions from secondary
+contexts. The improved precision comes from my two-pronged strategy of
+treating event narratives differently from other documents. TIER
+aggressively searches for extractions in event narrative stories but is
+conservative and extracts information only from event
+sentences in all other documents.  
+
+
+\subsection{Analysis}
+%or Discussion
+\label{analysis}
+
+%examples, secondary contexts
+
+I looked through some examples of TIER's output to try to gain
+insight about its strengths and limitations. TIER's role-specific
+sentence classifiers did correctly identify some sentences containing
+role fillers that were not classified as event sentences. Several
+examples are shown below, with the role fillers in italics:  \\
+
+
+%\small
+\noindent
+(1) ``The victims were identified as {\em David Lecky}, director of the
+Columbus school, and {\em James Arthur Donnelly}.'' \\
+
+%They also burned a U(gas station) owned by Valentin Villatoro and
+%destroyed U(a pylon) in San Francisco neighborhood.
+
+\noindent
+(2) ``There were {\em seven children}, including {\em four of}
+  {\em the Vice President's children}, in the home at the time.'' \\
+
+% \vspace*{.03in}
+% \noindent
+% {\it Meanwhile, {\em national police members} who were dressed in civilian
+% clothes seized university students {\em Hugo Martinez} and {\em Raul
+% Ramirez}, who are still missing.}
+
+% \vspace*{.03in}
+\noindent
+(3) ``{\em The woman} fled and sought refuge inside the facilities of the
+Salvadoran Alberto Masferrer University, where she took a group of
+{\em students} as hostages, threatening them with
+{\em hand grenades}.''  \\
+
+% \vspace*{.03in}
+% \noindent
+% % From TST4-MUC4-0028 !!!!
+% {\it {\em The tower}, located in the Maitenes sector, is one of the main towers of
+% the high tension network.}
+
+% \vspace*{.05in}
+% . tst2-muc4-0031 
+\noindent
+(4) ``The FMLN stated that {\em several homes} were damaged and that
+animals were killed in the surrounding hamlets and villages.''  \\
+
+% NP: gonzalo rodriguez gacha	Score: 0.43908	Sent: general carlos
+% arturo casadiego torrado , second in command of the colombian police ,
+% has reported the death of [[gonzalo rodriguez gacha]] . tst2-muc4-0042
+
+
+%\normalsize
+% From these examples, we can see that within event narratives, amount
+% of relevant information is given in a variety of secondary contexts.
+
+The first two sentences identify victims, but the terrorist event
+itself was mentioned earlier in the document. The third sentence
+contains a perpetrator 
+({\it the woman}), victims ({\it students}), and weapons ({\it hand grenades}) in the
+context of a hostage situation after the main event (a bus attack),
+when the perpetrator escaped.  The fourth sentence describes incidental damage to
+civilian homes during clashes between government forces and guerrillas.
+
+
+% Furthermore, some sentences represent such general contexts that 
+% you should have extracted information only after you know the documents where they are from are event relevant. 
+% As in the second example, you might write about those "seven children" playing 
+% "in the home" "at the time" in a normal story narrative. 
+% However, seen in a terrorism event narrative document, "in the home" "at the time" could bring terror to people's feelings 
+% and infer that the "seven children" probably were hurt and became victims.
+% The last sentence also represents such general contexts since such a tower could be written about for different purposes 
+% other than reporting a target in a terrorism event.
+
+However there is substantial room for improvement in each of TIER's
+subcomponents, and many role fillers are still overlooked. One reason
+is that  it can be difficult to recognize acts of terrorism.  Many sentences refer
+to a potentially relevant subevent (e.g., injury or physical damage) but
+recognizing that the event is part of a terrorist incident depends on the
+larger discourse. For example, consider the examples below that TIER
+did not recognize as relevant sentences:  \\
+
+% NP: 2 individuals	Score: 1.21517	Sent: later , # individuals in
+% a chevrolet opala automobile pointed ak rifles at the students ,
+% fired some shots , and quickly drove away . tst1-muc3-0039 
+
+%\small
+\noindent
+(5) ``Later, {\em two individuals} in a Chevrolet Opala automobile pointed AK
+rifles at the students, fired some shots, and quickly drove away.''\\ 
+
+% NP: university students hugo martinez	Score: 0.723856	Sent:
+
+\noindent
+(6) ``Meanwhile, national police members who were dressed in civilian
+clothes seized university students {\em Hugo Martinez} and {\em Raul
+  Ramirez}, who are still missing.'' \\
+% . tst2-muc4-0036 
+
+\noindent
+(7) ``{\it All labor union offices} in San Salvador were looted.'' \\
+
+%\normalsize
+
+In the first sentence, the event is described as someone pointing rifles at
+people and the perpetrators are referred to simply as
+individuals. There are no strong keywords in this sentence that reveal
+this is a terrorist attack.  In the second sentence, police are
+being accused of state-sponsored terrorism when they seize
+civilians. The verb ``seize'' is common in this corpus, but usually
+refers to the seizing of weapons or drug stashes, not people. The third
+sentence describes a looting subevent. Acts of looting and vandalism are
+not usually considered to be terrorism, but in this article it is
+in the context of accusations of terrorist acts by government officials.
+
+
+\section{Evaluating TIER on the Civil Unrest Data Set}
+
+
+Compared to the MUC-4 corpus (1700 documents), the 
+Civil Unrest data set (372 documents) is much smaller. 
+Therefore, for this data set, I will report the 10-fold cross validation results.
+Similar to the evaluation for the MUC-4 corpus,
+for the civil unrest data set, 
+%in addition to reporting the results of my multi-layered event extraction system, 
+I will also evaluate both my multi-layered event extraction system and its variations 
+by replacing or taking off certain components of the full system. 
+Then concerned with the limited size of this data set,
+I will show the learning curve of my full multi-layered event extraction system by 
+running the system on a quarter of the data 
+%at the beginning 
+and 
+increasing the data by another quarter per run. 
+
+
+\subsection{Experimental Results}
+
+\begin{table}[ht]
+
+\footnotesize
+
+\centering
+
+\begin{tabular}[center]{|p{1.4in}|cccc|c|} \hline
+
+%{|>{\small}l||>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c|>{\small}c
+
+%|>{\small}c|>{\small}c|}? \hline
+
+{\bf Method} & {\bf Agent} & {\bf Site} & {\bf Location} & {\bf Instrument}  & {\bf Average} \\ \hline
+
+\multicolumn{6}{|c|}{Results without document classification} \\ \hline
+
+{\bf AllSent} & 37/51/43 & 23/38/28 & 13/49/21 &	44/70/54 & 29/52/38 \\
+
+{\bf EventSent} & 62/25/35 & 50/19/28 & 39/15/22 & 75/57/64 & 56/29/38 \\
+
+{\bf RoleSent} & 45/43/44 & 32/24/27 & 20/31/24 & 61/54/57 & 39/38/39 \\
+
+{\bf EventSent+RoleSent} & 45/43/44 & 35/32/33 & 20/32/25 & 60/64/62 & 40/43/41 \\ \hline
+
+\multicolumn{6}{|c|}{Results with document classification} \\ \hline
+
+{\bf Dom/(ESent+RSent)} & 46/38/42 & 38/28/33 & 28/29/28 & 65/61/63 & 44/39/42 \\
+
+{\bf ESent+Dom/RSent} & 47/41/44 & 39/31/35 & 27/30/29 & 66/64/65 & 45/41/43 \\
+
+%{\bf EventDocs,RoleSent} & 51/40/45 & 50/33/40 & 54/55/55 & 58/40/48 & 60/58/59 & 55/45/50 \\
+
+{\bf ESent+ENarr/RSent} & 50/39/44 & 41/28/34 & 30/29/29 & 67/64/66 & 47/40/43 \\ \hline
+
+
+% {\bf 1.0fixed} & 81/70/75 & 53/80/64 & 71/74/72 & 68/67/68 & 84/92/88 & 42/80/55 & 71/77/73.9 \\ \hline
+
+% {\bf 2.0fixed} & 75/79/77 & 36/82/50 & 53/79/63 & 50/74/60 & 83/92/87 & 36/82/50 & 60/81/68.8 \\ \hline
+
+\end{tabular}
+
+\caption{Experimental results on Civil Unrest Data Set, reported as Precision/Recall/F-score}
+
+\label{results-table-cu}
+
+\end{table}
+
+The first section of Table \ref{results-table-cu} shows the performance 
+%of using two types of sentential classifiers only. 
+before incorporating document classification.
+The first row {\bf AllSent} shows the results of applying role filler extractors only. 
+We can see that without the benefits of high level contextual analysis components, 
+the local role filler extractors are not so precise and the overall extraction precision 
+is only .24. The second row {\bf EventSent} shows that by only applying the role filler extractors 
+within event sentences as identified by the event sentence classifier, the extraction accuracy 
+was greatly improved to .49, but the recall was reduced by half from .48 to .24.
+%, half of valid extractions were missing. 
+The third row {\bf RoleSent} shows that by 
+%allowing role filler extracting in all 
+extracting information from the role specific contexts as identified by the role-specific sentence classifiers, 
+the precision 
+%was limited 
+is 33\%
+while more extractions were found compared to 
+using the event sentence classifier filter. 
+The fourth row {\bf EventSent+RoleSent} shows that if we extract role fillers from both event sentences and 
+role-specific sentences, we achieve further gain in recall which implies that 
+the event sentences identified by the event sentence classifier are not strictly 
+a subset of the sentences labeled by the role-specific sentences. However, the precision is 
+still low at 33\%. 
+
+The second section of the table shows the performance of the event extraction systems 
+after incorporating the document classification components. 
+The first row 
+%{\bf Dom/(ESent+RSent)} 
+here shows that the domain document classifier, as described in Section \ref{domdoc-section}, 
+helps to improve the extraction 
+precision on top of the sentential classifiers with a small reduction in recall.
+The second row {\bf ESent+Dom/RSent} shows the performance when the domain document classifier was only applied 
+on top of the role-specific classifiers. 
+Compared to the results as in the first row, the precision was the same which means that 
+the event sentences can be safely applied to identify event sentences from all the documents.
+%and do not benefit from the domain document classifier. 
+The recall was slightly increased 
+because the event sentence classifier found event sentences from the documents that 
+%are missing by the domain document classifier. 
+were not labeled as domain-relevant.
+The last row {\bf ESent+ENarr/RSent} shows the superior precision achieved after replacing the domain document classifier 
+with the event narrative document classifier, with one point of recall loss.
+%However, compared to the domain document classifier, the event narrative document classifier 
+%with one point of recall loss though. 
+%This is probably due to the limited amount of documents included in the civil unrest documents.
+
+Overall, similar to what we have observed from the evaluation results using the MUC-4 corpus, 
+the {\it role-specific sentence classifiers} 
+help to recover event role filler information that is missed by the event sentence classifier. 
+In addition, limiting the application of {\it role-specific sentence classifier} 
+within event narratives as identified by the {\it event narrative document classifier} 
+%maintains good 
+improves precision.
+
+\begin{figure}[h]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 4in]{figures/TIER/learning_curve_cu_tier_4roles_2.eps}
+ \caption{Learning Curve for TIER}
+\label{learning_curve_cu_tier}
+\end{figure} 
+
+
+\begin{figure}[htbp]
+\center
+% \begin{center}
+\subfigure[An Event Narrative Story]{
+\includegraphics[width = 5in, height = 3.5in, scale=0.75]{figures/TIER/narrative_sample_CU.eps}}
+\subfigure[Its Event Role Filler Annotations]{
+\includegraphics[width = 2in, height = 3.5in, scale=0.25]{figures/TIER/CU_annotation_sample_2.eps}}
+\caption{An Example: Civil Unrest Event Annotations}
+% \end{center}
+\label{annotation-cu-role-sample-withDoc}
+\end{figure}
+
+
+\subsection{Learning Curve}
+\label{tier:lcurve}
+%Concerned with the limited size of the Civil Unrest data set, I 
+
+Compared to the evaluation results on the MUC-4 corpus, 
+the performance of {\it TIER} is relatively low on the Civil Unrest data set. 
+This is prabably due to the limited size of the data set. 
+To show how the extraction performance was affected by the size of data, 
+I drew the learning curve 
+by running the system on different proportions of the data set.
+Specifically, I start with running the system on a quarter of the data. 
+Then, I incrementally add in more data, one quarter a time and run {\it TIER} 
+on the gradually enlarged data set. 
+From the learning curve as shown in Figure \ref{learning_curve_cu_tier}, 
+we can see that the extraction performance of {\it TIER} was clearly improved 
+with more and more data fed in. 
+
+
+\section{Conclusions}
+
+In this chapter, I discussed the design and details of 
+my multi-layered event extraction architecture, {\it TIER}, 
+which incorporates both document genre
+and role-specific context recognition into 3 layers of analysis 
+to seek out event formation in a variety of different contexts. 
+Experimental results on two event domains show that {\it TIER} 
+can recover more event information compared to previous 
+event extraction systems, while maintaining a good extraction precision.

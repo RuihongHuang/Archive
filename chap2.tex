@@ -1,0 +1,1168 @@
+\chapter{Background and Related Work}
+\label{Chapter:Background}
+
+ %Background research? ha. They wish...this is all new and exciting research for which 
+%there has been no initial work.  
+Information Extraction (IE) 
+%(\cite{Hobbs10,Grishman12}) 
+(\cite{Hobbs10}) 
+is a major application area of 
+Natural Language Processing (NLP). 
+%As a core research area of Information Extraction (IE), 
+Among various sub-disciplines in Information Extraction, 
+Event Extraction (i.e., recognizing and extracting events from texts) 
+has attracted intensive research attention 
+over the last decades (e.g., \cite{hobbs93,autoslog-aaai93,riloff-aaai96,huffman96,yangarber00,freitag-acl98})
+and continues to thrive 
+in recent years (e.g., \cite{chieu02,califf03,finn04,shinyama06,maslennikov07,patwardhan-emnlp09,Ritter12}). 
+This dissertation focuses on improving event extraction performance 
+by exploring discourse-guided approaches and incorporating 
+accurate event recognition. 
+
+In the following sections, I will first introduce 
+the event extraction task and discuss different ``genres'' 
+of event extraction research, then I will 
+briefly mention standard evaluation datasets 
+%differences among 
+%multiple data sets 
+that are available for event extraction research. 
+Next, I will talk about two streams of classic approaches 
+that have been developed for event extraction. 
+Then, I will focus on discussing recent advances in event extraction 
+that are closely related to my research as presented in this dissertation. 
+I will also compare event extraction methods with the approaches
+that are developed for 
+several other related NLP tasks. 
+%specifically relation extraction and 
+%semantic role labeling. 
+Finally, I will cover various types of research work that are related to 
+recognizing events in texts (i.e., event recognition). 
+
+\section{Background: Event Extraction Task and Datasets}
+
+There have been several community-wide performance evaluations dedicated 
+to advancing event extraction research. These evaluations 
+have shaped event extraction as a major research area of natural 
+language processing and significantly influenced 
+event extraction research by 
+%suggesting 
+revealing
+a diverse set of extraction approaches and 
+providing standard annotated datasets for evaluating the future 
+event extraction systems. 
+
+\subsection{Message Understanding Conferences}
+
+Among these efforts, there was a series of Message Understanding 
+Conferences (MUC-1 to MUC-7), spanning over a decade (from 1987 to 1997), 
+that defined the template-based event extraction task 
+and attracted a significant amount of attention from the 
+research community. 
+In template-based event extraction, the goal of event extraction systems 
+is to identify and extract pieces of key event 
+information in texts and classify them into their corresponding 
+event roles. 
+Event roles can specify the participants of events, 
+objects that are involved in events, or properties 
+associated with an event.
+The extracted text snippets that fill certain event roles 
+are called {\it event role fillers}, which are generally noun phrases. 
+Template-based event extraction also requires template 
+generation specifying each event with its set of role fillers, 
+which is complex because many documents have multiple
+ templates (i.e., they discuss multiple events).
+
+Multiple event extraction evaluation datasets 
+were created in the MUCs. 
+The annotated datasets are mainly unstructured texts, military reports or 
+news reports, and each dataset was created for a specific domain. 
+The event domains vary from 
+terrorism events \cite{muc4-proceedings},  
+corporate joint ventures \cite{muc5-proceedings} and management successions \cite{muc6-proceedings}, 
+to airplane crashes \cite{muc7-proceedings}.
+The number of 
+%main 
+``string-fill''
+event roles varies too. 
+Several event roles were defined for terrorism events, 
+including perpetrators, victims, physical targets and weapons, 
+while 
+%only one or two 
+less number of event roles were defined 
+for events such as airplane crashes or joint ventures. 
+
+Many of these datasets have become benchmark collections 
+for evaluating event extraction systems. 
+%While there have been event extraction data sets created  
+%that only include documents that describe
+%relevant events
+Events of a particular type are sparse in 
+%texts and to 
+a general news stream, so the MUCs 
+mimic a realistic event extraction task where the IE system
+must determine whether a relevant event is present in the document 
+%and if so, extract its role fillers.
+before extracting role fillers.  
+Consequently, most of the
+Message Understanding Conference data sets 
+%represent this type of
+%event extraction task, containing 
+contain (roughly) a 50/50 mix of relevant and
+irrelevant documents (e.g., MUC-3, MUC-4, MUC-6, and MUC-7 \cite{hirschman98}).
+
+
+
+\subsection{Automatic Content Extraction}
+
+Automatic Content Extraction (ACE) \cite{ace} is 
+another research endeavor (1999 - 2008) that 
+focuses on developing information extraction techniques 
+from unstructued texts. 
+ACE presents several challenges to participants including 
+identifying entity mentions, classifying semantic relations 
+between pairs of entity mentions and extracting events in texts. 
+One characteristic of ACE is that 
+evaluation datasets were provided in multiple languages. 
+%specifically, 
+In addition to the English language, 
+ACE (e.g., ACE 2005, ACE 2007, ACE 2008) provided evaluation data in other languages too, 
+including Arabic, Chinese and Spanish. 
+Therefore, ACE has successfully stimulated wide 
+information extraction research interests across many countries. 
+
+%As to event extraction evaluations, 
+In contrast to the MUCs, 
+ACE defined a rich set of event types and 
+the events annotated in ACE datasets are 
+not with respect to a particular domain. 
+Instead, 
+multiple 
+%defined 
+types of events can be annotated in one single document. 
+%In addition, the defined event types in ACE 
+%are not domain events, such as terrorism events or plane crashes 
+%as in MUC annotations, but 
+And ACE systems are designed to process general news articles and 
+extract 
+general events, 
+such as interaction, movement, transfer, creation and destruction events. 
+Furthermore, as written in guidelines for both annotation and 
+evaluation purposes, in addition to event arguments 
+and attributes, each event mention must have 
+%has 
+an anchor 
+or trigger word associated with it.
+%, in addition to its event arguments 
+%and attributes according to a type-specific template. 
+
+  \begin{figure}[htbp]
+ \centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/relatedWork/text_sample.eps}
+ \caption{A Sample Document from the MUC-4 Corpus (Document ID: TST2-MUC4-0039).}
+\label{related_text_sample}
+\end{figure} 
+
+\subsection{Other Datasets for Event Extraction Research}
+
+Several other event extraction data sets have been created,  
+mostly by individual research groups. 
+Some well-known ones include the data set for the 
+domain of corporate acquisitions \cite{freitag-acl98,freitag-aaai00,finn04}, 
+job postings \cite{califf03,freitag-aaai00}, and seminar announcements
+\cite{freitag-acl98,ciravegna01,chieu02,finn04,gu06}. 
+%to assist event extraction research 
+Different from the MUC and ACE data sets, 
+which mainly consist of unstructured texts,
+%as discussed in the previous sections, 
+documents in some of the data sets, specifically job postings and 
+seminar announcements, are semi-structured. 
+%or structured.  
+For example, job postings generally put 
+the post date and job title at the beginning of a post. 
+There are also more recent data sets established  
+to facilitate event extraction research, including 
+the disease outbreak data set \cite{patwardhan-emnlp07} 
+and several biomedical event extraction data sets (e.g., \cite{McClosky11}). 
+The disease outbreak data set contains documents 
+that are collected from an open-source, global electronic reporting system for outbreaks 
+of infectious diseases, ProMed \cite{promed}. 
+%-mail6. 
+The biomedical data set has been used in the BioNLP09 \cite{Kim09} shared task, 
+which focuses on the extraction of 
+%nested 
+biomolecular events.
+
+\begin{figure}[htbp]
+\centering
+% \includegraphics[height = 2in]{figures/all_new_100_3.eps}
+% \includegraphics[width = 2in]{figures/IR_curve_4.eps}
+ \includegraphics[width = 5in]{figures/relatedWork/annotation_sample.eps}
+ \caption{Annotated Event Template for the Sample Document}
+\label{related_annotation_sample}
+\end{figure} 
+
+\subsection{Research in this Dissertation}
+
+%Some event extraction data sets only include documents that describe
+%relevant events (e.g., well-known data sets for the domains of
+%corporate acquisitions~\cite{freitag-acl98,freitag-aaai00,finn04}, job
+%postings \cite{califf03,freitag-aaai00}, and seminar announcements
+%\cite{freitag-acl98,ciravegna01,chieu02,finn04,gu06}).  But
+%many IE data sets present a more realistic task where the IE system
+%must determine whether a relevant event is present in the document,
+%and if so, extract its role fillers. Most of the
+%Message Understanding Conference data sets represent this type of
+%event extraction task, containing (roughly) a 50/50 mix of relevant and
+%irrelevant documents (e.g., MUC-3, MUC-4, MUC-6, and MUC-7 \cite{hirschman98}).
+%My research focuses on this setting where the event extraction system
+%is not assured of getting only relevant documents to process. 
+
+My dissertation focuses on extracting events from free texts 
+as in the MUC evaluations. 
+However, while the complete event extraction task involves template
+ generation, my work focuses on
+ extracting individual facts and not on template generation per se
+ (e.g., I do not perform coreference resolution or event
+ tracking).
+As noted earlier, most MUC data sets contain a mix of relevant 
+and irrelevant documents and represent a more realistic 
+setting for the event extraction task. 
+In addition, compared to the event extraction task in ACE, 
+the MUC evaluations target a particular type of event.
+%and 
+%the relevant event information is usually sparsely distributed 
+%in texts, which present a more challenging event extraction scenario.
+Among a series of MUC data sets, 
+MUC-4 terrorism corpus \cite{muc4-proceedings} 
+is a standard benchmark collection 
+for evaluating event extraction systems and is 
+especially interesting because 
+it defines a rich set of event roles in a terrorism event template. 
+Figure \ref{related_text_sample} shows a sample 
+document in MUC-4 corpus and Figure \ref{related_annotation_sample} 
+shows its associated event template with 
+the defined event roles filled.  
+
+
+In this dissertation, I propose 
+new event extraction architectures that improve 
+both event extraction coverage and accuracy by
+incorporating discourse information across sentences 
+%in event extraction models.
+to recognize event contexts before applying local extraction models.
+%I will also explore multi-faceted 
+I will evaluate my new event extraction architectures 
+using the MUC-4 terrorism data set and a  
+new data set on civil unrest events, created 
+in a similar style as the MUC 
+%evaluations 
+data sets
+(see Section \ref{TIER:creating-annotations} for more details), 
+to show the generality of my proposed approaches. 
+I will also use the same two data sets to evaluate the effectiveness of my 
+multi-faceted event recognition to improve the accuracy of 
+event extraction systems. 
+
+
+\section{Classic Approaches for Event Extraction}
+
+Contexts around a potential extraction play an important role in 
+determining its event role. 
+For example, in terrorism events, a person can be a 
+perpetrator or a victim depending on different contexts. 
+Most event extraction systems scan a text and search in small context
+windows using patterns or a classifier.
+%Most classic event extraction models can be characterized as either
+%pattern-based or classifier-based approaches. 
+Pattern-based approaches (e.g., \cite{hobbs93,palka93,autoslog-aaai93})
+extract event role fillers by matching linguistic patterns with 
+the local context of text segments that 
+have been identified as potential extractions. 
+Therefore, %the quality of patterns 
+%used for extraction 
+the extraction performance greatly depends on 
+the quality of the used linguistic patterns. 
+In Section \ref{related:pattern}, 
+I will discuss different methods that are used to derive extraction patterns.
+%As representative methods for building early event extraction systems, 
+%patterns were hand-crafted
+%I will discuss different pattern 
+In contrast, classification-based approaches 
+generally train statistical classifiers to 
+identify event role fillers. 
+These approaches can easily leverage a variety of contextual clues 
+and make extraction decisions based on 
+%calculated probabilities 
+statistical properties 
+of a potential extraction being an event role filler. 
+In recent years, 
+%classification-based 
+classifier approaches have been  
+frequently applied for extracting information 
+from free texts. 
+
+
+\subsection{Pattern-based Approaches}
+\label{related:pattern}
+Patterns are derived from texts that contain event role fillers 
+and capture lexical, syntactic or semantic properties that 
+are commonly associated with a particular type of event role. 
+Early event extraction 
+systems used hand-crafted patterns (e.g., \cite{hobbs93,muc3-system}). 
+FASTUS (\cite{hobbs93}) 
+%identifies differences of information extraction 
+%systems in the design goals from thorough text understanding systems, 
+%and proposed to 
+extracted information using 
+patterns that are encoded as finite state machines operating on 
+phrasal decompositions of a sentence. 
+In FASTUS, 95 hand-crafted patterns were used to extract event information 
+from the MUC-4 terrorism data set. For example, one pattern used to identify 
+victim role fillers is ``killing of $<$VICTIM$>$''.
+The experiments show that 
+the pattern-based approach 
+%allows much of linguistic complexity 
+%to be bypassed and 
+can extract information from texts effectively and efficiently. 
+
+However, creating patterns manually for each event domain 
+is tedious and time consuming, 
+%furthermore, hand-crafted patterns can suffer from 
+%low coverage because humans often miss 
+%information of a particular type can be 
+%conveyed in a variety of 
+so more recent systems generate patterns or rules automatically
+using supervised learning (e.g.,
+\cite{palka93,autoslog-aaai93,soderland95,huffman96,freitag-acl98,ciravegna01,califf03}).
+%Certain linguistic analysis is needed
+%matching process can be quick.
+Supervised learning algorithms use human annotated 
+%event templates 
+event information 
+as supervision when inducing 
+%domain specific 
+linguistic patterns. 
+%Because event templates are out-of-text 
+%annotations, the first step is to map the annotated 
+%event fact information into texts and produce 
+%tagged documents. 
+%Multiple mentions of an annotated fact 
+%might be seen in texts and 
+%supervised learning algorithms vary in how 
+%they determine event fact references. 
+%Generally, 
+PALKA (\cite{palka93}) 
+%is a 
+%semi-automatic 
+%semantic pattern 
+%acquisition 
+%generation tool that 
+acquires domain dependent semantic patterns 
+corresponding to pre-defined frame representations. 
+PALKA is semi-automatic because in the pattern acquisition process, 
+it needs simple forms of human interaction to determine the relevancy 
+of a clause and 
+%further 
+a relevant phrase in the clause, with respect to 
+frame definitions. 
+AutoSlog (\cite{autoslog-aaai93}) 
+%removed the human interaction 
+%needed by PALKA (\cite{palka93}) based on two observations.
+automatically generates domain-specific extraction patterns 
+using a training corpus tagged with the targeted event information.   
+%The first observation is that in news reports, 
+%the most important facets about a 
+%news event are typically reported 
+%the first references to event facts usually occur 
+%in sentences that describe the event. 
+%And the second observation is that the immediate linguistic context 
+%surrounding the targeted information ususally 
+%contains clues that describes its role in the event. 
+CRYSTAL \cite{soderland95} 
+automatically induces generalized linguistic patterns 
+(``concept-node definitions'') 
+by locating and comparing definitions that 
+are highly similar and creating unified definitions. 
+Sudo et. al \cite{sudo03} discuss the limitations of prior 
+extraction pattern representations and 
+introduce the subtree extraction model that 
+is based on arbitrary subtrees of dependency trees 
+and can extract entities beyond direct 
+predicate-argument relations.
+
+
+Relational learning algorithms \cite{freitag-acl98,califf03} 
+has been shown effective 
+to induce extraction rules or patterns. 
+These learning algorithms vary in how 
+how they induce patterns from texts. 
+SRV \cite{freitag-acl98} 
+%aims to induce patterns 
+%that are suitable to extract information from 
+%both formal and informal texts, such as E-mail 
+%messages and World Wide Web pages. 
+%Therefore, 
+%Specifically, SRV 
+induces 
+rules 
+%patterns
+from general to specific (top-down). 
+%Features about 
+Specifically, SRV starts with 
+all negative examples and 
+any positive examples not covered by already induced 
+rules (all positive examples at the beginning), 
+and adds predicates greedily to 
+cover as many positive and as few negative 
+examples as possible. 
+Predicates are formed using simple token based features 
+and relational features. 
+%which is less dependent on heuristics. 
+Instead, RAPIER \cite{califf03} is 
+a bottom-up learning algorithm that 
+consists 
+primarily of a specific to general search. 
+creates
+very specific rules and then generalizes those to cover additional positive examples.
+Specifically, RAPIER directly induces 
+%pattern-match rules that directly extract fillers for the slots in the
+extraction patterns that 
+%consists of 
+each is formed by 
+three parts:  
+%template. 
+a pre-filler pattern that must match the text 
+immediately preceding the slot-filler, 
+a slot-filler pattern that must match the actual slot-filler, 
+and a post-filler pattern that must match the text immediately
+following the filler. 
+RAPIER 
+constructs pattern rules for
+each training instance,   
+then takes random pairs of rules, 
+generalizes each pair and selects
+the best generalization as the new rule.
+
+
+As mentioned above, supervised pattern learning algorithms 
+require 
+%event template annotations to tag documents 
+%with specific event information. 
+annotated event information to learn patterns. 
+However, 
+%complete event templates 
+event information 
+is 
+expensive to annotate. 
+%and annotating hundreds 
+%of documents can take over a thousand 
+%hundreds of person hours. 
+%There have been algorithms that 
+%There have been we learning algorithms that 
+%aim for further reducing human supervision needed to 
+%learn patterns and 
+To further reduce human supervision needed to 
+learn patterns, several weakly supervised learning 
+approaches were proposed (e.g.,
+\cite{riloff-aaai96,riloff-aaai99,yangarber00,sudo03,stevenson05}). 
+AutoSlog-TS (\cite{riloff-aaai96}) 
+eliminated the dependency on an annotated 
+training corpus and only use untagged text. 
+Specifically, AutoSlog-TS is built on top of 
+AutoSlog (\cite{autoslog-aaai93}), which was 
+adapted to exhaustively generate patterns 
+that can be used to extract all noun phrases in texts. 
+Then AutoSlog-TS learns good extraction 
+patterns by ranking patterns based on the 
+statistical probabilities that patterns occur 
+in event relevant documents. 
+Later, Riloff and Jones \cite{riloff-aaai99} 
+presents a multi-level bootstrapping 
+algorithm that generates 
+both extraction patterns 
+and a semantic lexicon 
+simultaneously in a iterative process. 
+In this algorithm, only a handful of seed words 
+for each semantic category 
+%(in event corresponding to an event role) 
+is used as human supervision. 
+Specifically, a mutual bootstrapping 
+technique is used to alternately select 
+the best extraction patterns and bootstrap 
+its extractions into the semantic lexicon, 
+which is used to select the next extraction pattern. 
+Similarly, Snowball \cite{agichtein00} 
+requires only a handful of training examples
+from users. 
+The initial examples are 
+used to generate extraction patterns, which 
+in turn are used to extract 
+new training instances from the document collection. 
+ExDISCO (\cite{yangarber00}) 
+%further 
+reduces the required supervision to 
+several initial ``seed'' patterns 
+%only 
+in a iterative learning process.  
+ExDISCO uses the initial patterns to find 
+the first batch of event relevant documents, 
+from which, more patterns are learned. 
+Then, the learned patterns are used to retrieve 
+more event relevant documents. 
+The learning process iterates. 
+%Recent systems aim for reducing 
+
+In recent years, there have also been learning algorithms that 
+proceed in an unsupervised manner (e.g., \cite{Chambers11,shinyama06,sekine06}). 
+Chambers and Jurafsky (\cite{Chambers11}) acquire event words from an external
+resource, WordNet \cite{miller90}, 
+group the event words to form event scenarios, and group
+extraction patterns for different event roles. 
+Shinyama and Sekine (\cite{shinyama06}) proposed  
+preemptive information extraction that attempts to 
+automatically create 
+%all 
+feasible IE systems in advance 
+without human intervention. 
+Mainly, they cluster a set of articles from 
+the web that essentially describe a particular type of event 
+and discover patterns that can extract entities 
+playing the same role.
+%they use unrestricted relation discovery 
+%they 
+%unsupervised learning (e.g., \cite{shinyama06,sekine06}). 
+
+
+\subsection{Classifier-based Approaches}
+
+%In addition,
+Many classifiers have been created to
+%sequentially label event role fillers in a sentence 
+label phrases or single tokens with respect to an event role (e.g.,
+\cite{freitag-icml98,chieu02,finn04,li05,yu05}).
+Freitag (\cite{freitag-icml98}) suggested to use 
+three types of learners, rote memorization, 
+term-space text classification and relational rule induction, 
+to examine potential extractions, 
+and make extraction decisions using combined 
+probabilities that are mapped from 
+individual learners' confidences. 
+Chieu and Ng (\cite{chieu02}) proposed to 
+apply a specific machine learning algorithm, maximum entropy, 
+to weigh multiple sources of extraction evidence 
+in a single statistical model. 
+Their extraction evidences are largely derived from the local contexts of 
+target phrases and the phrases themselves. 
+A rich set of specific features were used to train their models. 
+Note that in this work, Chieu and Ng also learned to 
+build event templates using the product of 
+entity pair relation probabilities. 
+%including lexical features and structural features 
+%(one domain they experimented on is seminar a )
+%specifically, they
+%mainly include lexical features, words to the  and phrase forms, 
+%and 
+In addition, Wrap-Up \cite{soderland94} 
+is a trainable IE discourse component 
+that learns to construct event templates. 
+
+Instead of classifying phrases 
+%as a whole 
+with respect to 
+an event role (\cite{freitag-icml98,chieu02}), 
+methods (\cite{finn04,li05,yu05}) 
+%were 
+have also been 
+proposed  
+to classify single tokens to indicate if each token 
+is part of an extraction or not. 
+Finn and Kushmerick (\cite{finn04}) 
+ treat the identification 
+of extractions' start and end positions as distinct 
+token classfication tasks and train separate statistical 
+classifiers for each. 
+Specifically, they chose support vector machines 
+as their machine learning algorithm. 
+The features that are used to classify 
+each token include the token itself, part-of-speech, 
+chunking, orthographic and gazetteer information. 
+Later, instead of using only local features, Finkel et al. (\cite{finkel05}) 
+used long distance dependency models to 
+enforce label consistency and extraction 
+template consistency constraints. 
+In their work, Gibbs sampling was employed to 
+perform approximate inference which runs in tractable time. 
+Li et al. (\cite{li05}) also applied machine learning algorithms 
+to classify each token in texts. 
+They especially 
+emphasized the importance of using an uneven margins 
+parameter in support vector machines and perceptrons
+to tackle the skewed distributions between 
+positive and negative instances, which is notable 
+in event extraction task because relevant event information 
+is only sparsely scattered in texts.
+Yu et al. (\cite{yu05}) proposed a 
+cascaded event extraction approach
+%that 
+%first identify blocks of text 
+and showed that it is effective to 
+automatically extract information from resumes. 
+Their approach first identifies blocks of 
+texts that have labels (e.g., {\it Personal Information} in their case.), 
+then classify each token (mainly punctuations because 
+potential extractions are generally separated by 
+punctuations in their case) within certain types of blocks 
+with respect to a specific type of information (e.g., applicants' names). 
+
+
+Recently, structured sequence tagging models (\cite{Rabiner89,McCallum2000,CRFs01}), 
+especially Conditional Random Fields (\cite{CRFs01,peng04}) and 
+its variants or generalized models (e.g., \cite{bunescu04}), have 
+%been 
+proved to be effective 
+for information extraction tasks. 
+Instead of labeling an individual phrase or a single token 
+%each time, 
+independently, 
+structured sequence tagging models consider 
+mutual dependencies between labels that are assigned 
+to neighboring text units, and label a sequence of tokens. 
+%a time.  
+Among these, Lu and Roth (\cite{Lu2012}) uses the latent-variable semi-Markov 
+conditional random fields for jointly extracting event role fillers 
+from texts.
+
+% it does not revolve around
+% domain-specific event recognition.
+
+
+%\subsection{Recognizing Event Contexts Before Extracting Information}
+\section{Recent Advances in Event Extraction Research}
+
+%Going Beyond Local Context When Making Event Extraction Decisions
+Most of the classic approaches heavily rely on the local context 
+of individual potential extractions when making decisions.
+However, recent work has begun to 
+%explore the use of additional contexts
+leverage additional contextual information and consider  
+associations among candidate role fillers 
+to improve extraction performance. 
+
+\subsection{Incorporating Richer Event Clues from Sentential Contexts}
+
+Research has been conducted to explore 
+sentential contexts (\cite{maslennikov07,gu06,patwardhan-emnlp07,patwardhan-emnlp09}) 
+when identifying individual role fillers. 
+Maslennikov and Chua (\cite{maslennikov07}) 
+propose to view event fact extraction 
+at the multi-resolution
+layers of phrases, clauses and sentences
+using dependency and discourse relations.
+Specifically, they use both discourse trees and
+local syntactic dependencies {\it within} sentences in a pattern-based
+framework. 
+Their extraction framework, called ARE (short for Anchor and Relation), 
+uses clause level discourse relations to 
+both filter noisy dependency
+paths and to increase reliability
+of dependency path extraction. 
+%Specifically, 
+ARE starts with extracting
+candidate entities (anchors) of appropriate anchor
+types, evaluates the relationships between them,
+further evaluates all possible candidate templates,
+and outputs the final template.
+ 
+Some research work (\cite{gu06,patwardhan-emnlp07,patwardhan-emnlp09}) 
+has trained separate sentence classifiers to identify 
+event relevant sentences and then consider  
+extracting event information mainly from the relevant sentences as 
+identified by the sentence classifiers.
+Gu and Cercone (\cite{gu06}) 
+introduce the concept of extraction
+redundancy that many current sequential 
+labeling IE systems often produce 
+undesired redundancy extractions. 
+%, and show that current document
+%HMM IE systems often produce undesired
+%redundant extractions. In order 
+To address this issue, they propose a segment based
+two-step extraction approach in which a segment
+retrieval step is imposed before the extraction
+step.
+Specifically, they created HMMs to first identify relevant
+sentences and then trained another set of HMMs to extract individual
+role fillers from the relevant sentences.
+Patwardhan and Riloff (\cite{patwardhan-emnlp07})
+distinguish primary and secondary extraction patterns and argue that 
+primary extraction patterns can be used by 
+themselves to extract event information while 
+the use of secondary patterns should be constrained within
+event relevant sentences. 
+They also designed a
+weakly-supervised learning paradigm to 
+learn to recognize event sentences. 
+%and then extracted role fillers 
+%from the event sentences 
+%using
+%patterns.
+% that have a {\it semantic affinity} for an event role.
+Later, Patwardhan and Riloff (\cite{patwardhan-emnlp09}) also 
+proposed a unified model for event extraction, called GLACIER, that jointly considered sentential
+evidence and local phrasal evidence in a probabilistic framework when extracting
+role fillers. 
+GLACIER uses sentence classifiers that were 
+%supervised trained 
+trained with supervised learning. 
+%and they experimented with event template answer key labeled 
+%event sentences and human judged event sentences. 
+Experimental results show that GLACIER  
+%well 
+balanced the influence of 
+sentential context with local contextual evidence 
+and improved the performance of event extraction. 
+
+Overall, by 
+%going 
+looking 
+beyond 
+%local 
+the immediate contexts of potential extractions, 
+%the above several 
+previous 
+models have achieved better extraction performance.
+However, none of 
+%them 
+these systems 
+%explores 
+explored contexts out of the sentence containing the candidate role fillers. 
+%and use discourse level wider context to further improve event extraction performance.      
+In contrast, my discourse-guided event extraction models 
+explore how an event is described in a document and 
+explicitly model 
+the contextual influences 
+%a variety of discourse information 
+across a document, 
+including lexical cohesion properties, discouse relations, 
+and domain-specific candidate role filler distributions. 
+%by a variety of discourse information 
+%is modeled as textual cohesion properties across sentences, including 
+%lexical cohesion features, discourse relations and domain-specific 
+%candidate role filler distributional features. 
+
+\subsection{Inferences by Leveraging Associations across Event Role Fillers}
+
+%\subsection{Using Document Level Information in Event Extraction}
+There has been research (\cite{liao10,Ji08,Lu2012}) that mines 
+associations among candidate role fillers 
+to improve extraction performance. 
+One advantage of such research is that 
+%they 
+this approach 
+can 
+easily go beyond 
+%using 
+the local context of an individual candidate role filler 
+and leverage information 
+about other role fillers 
+from the same sentence, the same document, or even across documents 
+to make better extraction decisions.
+%Only a few  event extraction models have gone beyond individual
+%sentences to make extraction decisions.  
+Liao and Grishman (\cite{liao10}) 
+observed that correlations exist between occurrences of
+different types of events and different event arugments. 
+For example, they found that Attack, Die, and Injure events often occur together 
+and Victims of a Die event are frequently
+ the Targets of an Attack event. 
+ Following this observation, they 
+introduced cross-event information to enhance 
+the performance of multi-event-type extraction 
+by
+using 
+information about other types of events to 
+make predictions or resolve ambiguities 
+regarding a given event.
+Specifically, they calculated
+document-level role filler statistics and used the
+co-occurrence information between different types of events and 
+between different role
+fillers as features to train better extraction models. 
+% for one particular type of role fillers.  
+Ji and Grishman \cite{Ji08} 
+%enforced event role consistency across
+%different documents.  
+noted that 
+many events are
+reported multiple times, in different forms, both 
+within the same document and within topically 
+related documents. 
+Therefore, they 
+proposed to 
+%tackle the challenges of 
+%event extraction 
+%by taking 
+take advantage of alternate descriptions 
+of the same event fact and 
+propagate
+consistent event arguments across sentences 
+and documents. 
+%Combining global evidence 
+%from related documents with local decisions, 
+% cross-document inference 
+
+More recently, Lu and Roth \cite{Lu2012}
+%sequence tagging, 
+use the latent-variable semi-Markov 
+conditional random fields 
+to encode role filler dependencies 
+(e.g., as shown in their paper, 
+an AGENT and an VICTIM are often seen with ``killed'' in between.)
+as structured preferences in a model learning process.  
+Therefore, this approach enables joint extraction of event role fillers from texts.
+Li et al. \cite{Li13} uses structured perceptron to jointly 
+predict event triggers and their arguments within a sentence. 
+Various global features are designed to model dependencies 
+between two triggers and among multiple arguments.
+
+Overall, these models focus on the inter-relations between different role fillers or 
+different mentions of the same role filler in a sentence (\cite{Lu2012,Li13}), 
+document (\cite{liao10}) or corpus (\cite{Ji08})   
+and use the leveraged role filler associations to 
+%constrain the assignments 
+aid event role classification.
+However, different from my research of discourse-guided 
+event extraction, neither of them concentrates on exploring wider 
+%and more sufficient 
+contexts 
+across sentences 
+%beyond individual sentence
+other than role fillers associations,  
+and these contexts include lexical links and discourse relations across sentences. 
+%when classifying their corresponding event roles. 
+%Ray mooney's work,  
+
+%However, their model is mainly for extracting event information 
+%from individual sentences
+
+
+\section{Other Related NLP Research Areas}
+
+Event extraction is closely related to several other NLP areas, such as relation extraction and
+semantic role labeling, but
+these tasks each have a unique goal and present different challenges to computational
+linguists.
+%In terms of my
+In the following subsections, I briefly compare event extraction research
+with several other related NLP study areas.
+In addition, I will also discuss research in text segmentation and
+modeling document-level content transitions, which
+are closely related to my research on discourse-guided event extraction
+architectures.
+
+
+\subsection{Relation Extraction}
+
+Research has been done on relation extraction (e.g.,
+\cite{roth01,zelenko03,Nanda04,Bunescu05,bunescu07}), 
+which aims to identify predefined semantic relations 
+between 
+%isolated 
+pairs of entities in text. 
+%Therefore, the focus of relation extraction is 
+%slightly different from event extraction that targets  
+%template-based event analysis where an event template 
+%can consist of multiple entities. 
+In contrast, an event can consist of more than two entities. 
+However, as discussed earlier, many classic event extraction 
+methods decompose event extraction to extracting 
+one event role filler a time and thus, the event extraction 
+task can be viewed as classifying the relation between 
+an event trigger and a potiental extraction.
+
+Relation extraction methods mainly fall into 
+two categories, feature-based methods and 
+kernel-based methods. 
+Feature-based methods (\cite{Nanda04,Zhou05})
+for relation extraction encode various
+lexical, syntactic and semantic features explicitly
+%in 
+when training classification models.
+In comparison, kernel-based methods (\cite{zelenko03,Culotta04,Bunescu05,Zhang06a,Zhang06b,Zhou07})
+%provide an elegant way to 
+%can 
+explore the parsing or dependency structural information of 
+the text between two entities implicitly 
+%in the learning process 
+by
+%structural features implicitly by 
+computing the similarity between two objects via a kernel function.
+
+Recently, Bunescu and Mooney \cite{bunescu07} 
+proposed a weakly supervised relation extraction approach that 
+requires only a few pairs of  
+%positive and 
+%negative training examples. 
+well-known entities, where some (positive) pairs 
+clearly exhibit a particular relation while others (negative) do not. 
+%knowing that some to exhibit or not exhibit a 
+%particular relation
+Sentences containing the examples are extracted from the web. 
+They assume that many sentences containing 
+a positive entity pair state the desired relation,  
+and none of the sentences containing a negative entity pair state 
+the relation.
+Multiple instance learning was used to exploit this 
+weakly supervised learning setting.
+Lately, researchers have used distant supervision (\cite{Mintz09,Yao11,Hoffmann10})
+leveraged from existing databases to initiate the learning of relation extractors 
+with many more entity pairs. 
+
+%Essentially, relation extraction task is
+%different from event extraction because it focuses on isolated
+%relations rather than template-based event analysis.
+
+
+
+\subsection{Open Information Extraction}
+
+Open Information Extraction (Open IE) is the task 
+of extracting assertions from massive 
+corpora, commonly the web, without requiring a pre-specified vocabulary. 
+Open IE techniques (e.g., KNOWITALL \cite{etzioni05} and TEXTRUNNER \cite{banko07})
+%Open IE
+have been developed to generate a large set of domain independent relational tuples
+from texts in the web. 
+Each of the learned relational tuples generally consists of 
+a pair of entities and a string to represent the relation between the entity pair. 
+%The relation string is often derived from the words between 
+%the entity pair and local contexts surrounding each of the entity pair. 
+NELL (short for Never Ending Language Learning, \cite{carlson-sslnlp09,Carlson10}) is another IE 
+learner that is initiated by a handful of relation pairs 
+and 
+%has continued 
+continues to accumulate learned relations. 
+%since then. 
+NELL simultaneously learns classifiers 
+for different entity categories and relations 
+aided by an ontology defining
+constraints that couple the classifier training. 
+
+%Shinyama and Sekine (\cite{shinyama06,sekine06}) propose  
+%preemptive information extraction that attempts to 
+%automatically create feasible IE systems in advance 
+%without human intervention. 
+%Mainly, they cluster a set of articles from 
+%the web that essentially describe a particular type of event 
+%and discover patterns that can extract entities 
+%playing the same role.
+
+\subsection{Semantic Role Labeling}
+
+A large amount of research has been conducted for semantic role labeling 
+(\cite{Jurafsky_SRL_2002,Xue_EMNLP_2003,thompson_ECML_2003,punyakanok04,haghighi05,yi05,Carrerras_CoNLL_2005}),
+, also called shallow semantic parsing, which aims to
+detect semantic arguments of a predicate and
+classify the arguments into their 
+%thematic 
+semantic roles.
+The predicate 
+%can be 
+is usually a verb or a noun in a sentence
+and the arguments are mostly from the same sentence as the predicate.
+Compared to event extraction, semantic role labeling focuses on
+%general semantic analysis
+semantic analysis of individual predicates, instead of
+extracting certain types of information with respect to an event.
+Frequently, fillers of a certain type of event role 
+can perform distinct 
+%thematic 
+semantic roles
+when associated with different predicates. 
+For example, in terrorism events, perpetrators can be both the agent of
+actions such as ``bombed'', and the patient of predicates such as ``arrested''.
+
+%\subsection{Paraphrasing}
+
+%As noted previously, event extraction systems
+%heavily rely on the context of potential extractions to determine
+%their possible event roles.
+
+
+\subsection{Text Segmentation}
+
+My event extraction research is loosely related to
+text segmentation (\cite{Hearst97,Beeferman99,Kehagias03,Ji03,Malioutov06,Kazantseva11}), 
+which aims to divide a document
+into consecutive  segments such that each segment
+describes a coherent central topic.
+%My discourse-guided event extraction architectures
+Similarly, my research targets better
+event extraction performance by identifying
+contexts in a document that describe a
+particular type of event.
+However, text segmentation systems
+generally 
+%draw boundaries between paragraphs
+%and thus, each segment consists of one or more
+%paragraphs. 
+produce text segments that consist of a series of 
+sentences discussing the same topic. 
+In comparison, my discourse-guided event extaction
+architectures detect event contexts
+as fine as an individual sentence in a document.
+
+
+
+\subsection{Document-level Content Models}
+
+My work is also related to the document-level content models introduced by
+\cite{Barzilay04}, which utilized a novel adaptation of 
+the 
+generative
+sequential model HMMs \cite{Rabiner89} to capture the topics that the
+texts address and the transitions between topics. The learned topic
+sequences improved two applications, information ordering and
+extractive summarization. Recently, \cite{Sauper10} incorporates the
+latent content structure directly into two text analysis tasks,
+extractive summarization and sentiment analysis, in a joint learning
+framework. In one of my discourse oriented event extraction architectures, I will include a
+structured sentence classifier to model the textual cohesion across sentences in a document.
+However, the structured sentence classifier as included in my 
+second discourse-guided event extracion model is different from the structured content models, 
+because the former is trained discriminatively and  with respect to one particular task. 
+%TIER \cite{HuangR11} used a document genre classifier to
+%recognize event narrative stories and then identified {\it event
+% sentences} as well as {\it role-specific sentences} in the event
+%narratives, but each sentence was classified and used independently.
+%\subsection{Enforcing Consistencies Among Multiple Event Role Fillers}
+%coreference relations, 
+
+
+\section{Event Recognition}
+In this dissertation, I study event recognition too, which  
+aims to identify documents describing a specific
+type of event. 
+This is different from event extraction studies 
+that aim to produce full representations of events. 
+There has been relatively little work that focuses specifically on the
+event recognition task, but event recognition has been studied in the
+context of other tasks. 
+
+\subsection{``Text Filtering'' in Event Extraction}
+
+There has been a lot of research on event
+extraction (e.g.,
+\cite{ace,hobbs93,riloff-aaai96,yangarber00,chieu02,califf03,sudo03,stevenson05,sekine06}),
+where the goal is to extract facts about events. 
+The MUC-4 evaluation \cite{muc4-proceedings} included ``text filtering''
+results that measured the performance of event extraction systems at
+identifying event-relevant documents. The best text filtering
+results were high (about 90\% F score), but relied on hand-built
+event extraction systems.
+%  that required substantial manual knowledge engineering. 
+More recently, some research has incorporated event
+region detectors into event extraction systems to improve extraction
+performance \cite{gu06,patwardhan-emnlp07}.
+
+\subsection{Event Detection in Social Media}
+
+There has been recent work on event detection from social media
+sources \cite{Becker11,Popescu11}.  Some research identifies
+specific types of events in tweets, such as earthquakes
+\cite{Sakaki10} and entertainment events \cite{Benson11}.  There has
+been work on event trend detection \cite{Lampos10,Mathioudakis10}
+and event prediction through social media, such as predicting 
+elections \cite{Tumasjan10,Conover11} or stock market indicators 
+\cite{Zhang10}.  \cite{Ritter12} generated a calendar of events 
+mentioned on twitter. \cite{Metzler12} proposed structured
+retrieval of historical event information over 
+microblog archives 
+%and retrieved a ranked
+%list of historical event summaries 
+by distilling 
+high quality event representations using 
+a novel temporal query expansion technique.
+
+\subsection{Text Classification}
+Text classification techniques \cite{Nigam00,Forman03,Joachims99} categorize documents according 
+to their topics or themes. 
+There is also text classification research that has focused on event categories.
+\cite{acmtois94} used an information extraction system to generate
+{\it relevancy signatures} that were indicative of different event types.
+This work originally relied on manually labeled patterns and a
+hand-crafted semantic dictionary. Later work \cite{riloff-nlir99} eliminated the
+need for the dictionary and labeled patterns, but still assumed
+the availabilty of relevant/irrelevant training texts, and
+required a parser to match the linguistic patterns in new texts. 
+
+
+% % representations of events using 
+% % extraction patterns
+% % \cite{riloff-aaai96,soderland95,huffman96,ciravegna01,sudo03,shinyama06}
+% % or classifiers \cite{chieu02,finn04,li05,yu05}.  
+% while event
+% recognition aims to identify the articles containing events without
+% actually extracting structured events out of text.  
+\subsection{Topic Detection and Tracking (TDT)}
+
+Event recognition is also related to Topic Detection and Tracking
+(TDT) \cite{Allan98,TDT02} which addresses event-based organization of a
+stream of news stories.  
+% A surge of research efforts were developed over five years \cite{TDT02}.  
+%Of the five tasks defined in TDT, our work is especially related to %
+% New Event Detection (NED), %also called % First Story Detection (FSD),
+% which is considered the most difficult % task \cite{Allan2000b} of all
+% five ones.
+Event recognition is similar to New Event Detection (NED), also
+called First Story Detection (FSD), which is considered the most
+difficult TDT task \cite{Allan2000b}.
+% of all five tasks in TDT.  
+Typical approaches reduce documents to a set of
+features, either as a word vector \cite{Allan2000a} or a probability
+distribution \cite{Jin99}, and compare the incoming stories to stories
+that appeared in the past by computing similarities between their
+feature representations.  
+% \cite{Allan2000b} 
+% predicated and
+% showed that as long as FSD is based upon any full-text similarity
+% comparison, the detection perfor mance will be poor and substantialy
+% different approaches are required.
+Recently, event paraphrases \cite{Petrovi12} have been explored to deal with
+the diversity of event descriptions.
+%  and improved NED performance.
+However, the NED task differs from our event
+recognition task 
+because we want to find all stories describing a certain type of event, not
+just new events. 
+
+\subsection{Faceted Search v.s Multi-faceted Event Recognition}
+Faceted search (\cite{Hearst06,Tunkelang2009}) enables users 
+to explore a multi-dimensional information space 
+by combining text search with 
+%multiple filters 
+%that are used to 
+a progressive narrowing 
+of choices in each dimension.
+Information dimensions are also called facets, which  
+correspond to properties of the information elements, e.g., webpages 
+and are useful to organize a large collection of information.
+However, in my multi-faceted event recognition approach, 
+facets refer to specific defining characteristics of event, 
+e.g., purpose of events. 
+Furthermore, I use facets, in addition to event expressions, 
+to accurately identify 
+events of a particular type.
+
+\section{Conclusions}
+
+In this chapter, I first overviewed the event extraction task and surveyed 
+classic approaches for extracting events from texts. 
+Then I discussed recent advances in event extraction research and 
+compared my work with the newly proposed approaches. 
+I also briefly reviewed several NLP research areas that are related to 
+event extraction. 
+Finally, I discussed previous event recognition research that has 
+mainly under other guises. 
